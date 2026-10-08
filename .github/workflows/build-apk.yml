@@ -1,0 +1,69 @@
+name: Build My Bookshelf APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'index.html'
+      - 'manifest.json'
+      - 'service-worker.js'
+      - '.github/workflows/build-apk.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Prepare Capacitor Android app
+        run: |
+          mkdir -p www
+          cp index.html manifest.json service-worker.js icon-192.png icon-512.png www/
+          cat > package.json <<'EOF'
+          {
+            "name": "my-bookshelf-android",
+            "version": "1.0.0",
+            "private": true,
+            "description": "Android wrapper for My Bookshelf",
+            "dependencies": {
+              "@capacitor/android": "^7.4.3",
+              "@capacitor/core": "^7.4.3"
+            },
+            "devDependencies": {
+              "@capacitor/cli": "^7.4.3"
+            }
+          }
+          EOF
+          npm install
+          cat > capacitor.config.json <<'EOF'
+          {
+            "appId": "com.promodeals.mybookshelf",
+            "appName": "My Bookshelf",
+            "webDir": "www",
+            "bundledWebRuntime": false,
+            "server": {
+              "androidScheme": "https"
+            }
+          }
+          EOF
+          npx cap add android
+          npx cap sync android
+
+      - name: Build debug APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: my-bookshelf-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
