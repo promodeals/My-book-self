@@ -7,6 +7,7 @@ on:
       - 'index.html'
       - 'manifest.json'
       - 'service-worker.js'
+      - 'android-custom/**'
       - '.github/workflows/build-apk.yml'
 
 jobs:
@@ -60,6 +61,37 @@ jobs:
           EOF
           npx cap add android
           npx cap sync android
+          mkdir -p android/app/src/main/java/com/promodeals/mybookshelf
+          cp android-custom/FileSharePlugin.java android-custom/MainActivity.java android/app/src/main/java/com/promodeals/mybookshelf/
+          python3 - <<'PY'
+          import xml.etree.ElementTree as ET
+          path = "android/app/src/main/AndroidManifest.xml"
+          ET.register_namespace("android", "http://schemas.android.com/apk/res/android")
+          ns = "{http://schemas.android.com/apk/res/android}"
+          tree = ET.parse(path)
+          root = tree.getroot()
+          app = root.find("application")
+          activity = None
+          for item in app.findall("activity"):
+              if item.get(ns + "name", "").endswith("MainActivity"):
+                  activity = item
+                  break
+          if activity is None:
+              raise SystemExit("MainActivity not found in generated Android manifest")
+          activity.set(ns + "launchMode", "singleTask")
+          for action_name in ("android.intent.action.SEND", "android.intent.action.SEND_MULTIPLE"):
+              exists = any(
+                  any(a.get(ns + "name") == action_name for a in filt.findall("action"))
+                  for filt in activity.findall("intent-filter")
+              )
+              if exists:
+                  continue
+              filt = ET.SubElement(activity, "intent-filter")
+              ET.SubElement(filt, "action", {ns + "name": action_name})
+              ET.SubElement(filt, "category", {ns + "name": "android.intent.category.DEFAULT"})
+              ET.SubElement(filt, "data", {ns + "mimeType": "*/*"})
+          tree.write(path, encoding="utf-8", xml_declaration=True)
+          PY
 
       - name: Build debug APK
         run: |
