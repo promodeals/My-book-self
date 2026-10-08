@@ -75,7 +75,7 @@ $('fileInput').onchange=()=>{pendingFiles=[...$('fileInput').files];if(!pendingF
 $('cancelAdd').onclick=()=>{$('categoryDialog').close();$('fileInput').value='';pendingFiles=[]};
 $('categoryForm').onsubmit=async e=>{e.preventDefault();const category=$('category').value;for(const f of pendingFiles){await new Promise((resolve,reject)=>{const r=store('readwrite').add({name:f.name,type:f.type,size:f.size,added:Date.now(),category,blob:f});r.onsuccess=resolve;r.onerror=()=>reject(r.error)})}$('categoryDialog').close();$('fileInput').value='';pendingFiles=[];refresh()};
 $('search').oninput=render;$('filter').onchange=render;
-openDB().then(d=>{db=d;refresh()}).catch(e=>{console.error(e);$('library').innerHTML='<div class="empty"><strong>Storage could not be opened.</strong><p>Please try again in Chrome.</p></div>'});
+openDB().then(async d=>{db=d;await refresh();const params=new URLSearchParams(location.search);if(params.has('shared')){const n=Number(params.get('shared'))||1;alert(n+' shared file'+(n===1?'':'s')+' added to My Bookshelf.');history.replaceState({},'',location.pathname)}else if(params.has('share-error')){alert('The shared file could not be saved. Please open My Bookshelf and try Add files.');history.replaceState({},'',location.pathname)}}).catch(e=>{console.error(e);$('library').innerHTML='<div class="empty"><strong>Storage could not be opened.</strong><p>Please try again in Chrome.</p></div>'});
 if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').catch(console.error))}
 </script>
 </body>
