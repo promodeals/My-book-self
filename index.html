@@ -73,10 +73,10 @@ async function deleteFile(id){const f=byId(id);if(!f||!confirm('Delete "'+f.name
 $('addBtn').onclick=()=>$('fileInput').click();
 $('fileInput').onchange=()=>{pendingFiles=[...$('fileInput').files];if(!pendingFiles.length)return;$('pendingName').textContent=pendingFiles.length===1?pendingFiles[0].name:pendingFiles.length+' files selected. They will all use this category.';$('categoryDialog').showModal()};
 $('cancelAdd').onclick=()=>{$('categoryDialog').close();$('fileInput').value='';pendingFiles=[]};
-$('categoryForm').onsubmit=async e=>{e.preventDefault();const category=$('category').value;for(const f of pendingFiles){await new Promise((resolve,reject)=>{const r=store('readwrite').add({name:f.name,type:f.type||'',size:f.size,added:Date.now(),category,blob:f});r.onsuccess=resolve;r.onerror=()=>reject(r.error)})}$('categoryDialog').close();$('fileInput').value='';pendingFiles=[];await refresh()};
+$('categoryForm').onsubmit=async e=>{e.preventDefault();const category=$('category').value;for(const f of pendingFiles){await new Promise((resolve,reject)=>{const r=store('readwrite').add({name:f.name,type:f.type,size:f.size,added:Date.now(),category,blob:f});r.onsuccess=resolve;r.onerror=()=>reject(r.error)})}$('categoryDialog').close();$('fileInput').value='';pendingFiles=[];refresh()};
 $('search').oninput=render;$('filter').onchange=render;
-(async()=>{try{db=await openDB();await refresh()}catch(e){$('library').innerHTML='<div class="empty">Sorry, storage could not be opened in this browser. Try opening this app in Chrome.</div>'}})();
-if('serviceWorker' in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{});
-let deferredInstall;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstall=e;const b=document.createElement('button');b.className='btn secondary';b.textContent='Install app';b.onclick=async()=>{deferredInstall.prompt();deferredInstall=null;b.remove()};document.querySelector('.toolbar').appendChild(b)});
+openDB().then(d=>{db=d;refresh()}).catch(e=>{console.error(e);$('library').innerHTML='<div class="empty"><strong>Storage could not be opened.</strong><p>Please try again in Chrome.</p></div>'});
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').catch(console.error))}
 </script>
-</body></html>
+</body>
+</html>
