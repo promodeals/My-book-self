@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#24324a">
+<meta name="description" content="Your personal offline bookshelf for PDFs, notes, and other study files.">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<title>My Bookshelf</title>
+<style>
+:root{--bg:#f4f6fb;--panel:#fff;--ink:#182235;--muted:#667085;--accent:#31496b;--line:#e3e8f1;--soft:#edf2fa;--danger:#b42318}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{background:linear-gradient(135deg,#24324a,#405c83);color:white;padding:22px 18px 26px;border-radius:0 0 24px 24px}
+.head{max-width:900px;margin:auto}header .eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.8}h1{font-size:28px;margin:5px 0}header p{margin:4px 0 0;opacity:.86}
+main{max-width:900px;margin:0 auto;padding:18px 14px 40px}.toolbar{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:14px}
+input,select,button{font:inherit}input[type=search],select{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:12px;padding:12px;min-width:0}
+#search{flex:1;min-width:170px}.btn{border:0;border-radius:12px;padding:12px 15px;background:var(--accent);color:#fff;font-weight:650;cursor:pointer}.btn.secondary{background:#e4eaf3;color:#24324a}.btn:active{transform:scale(.98)}
+.stats{display:flex;gap:10px;margin:12px 0 18px}.stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;flex:1}.stat strong{display:block;font-size:21px}.stat span{font-size:12px;color:var(--muted)}
+.section-title{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:16px 2px 10px}.section-title h2{font-size:17px;margin:0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.file{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;min-width:0;box-shadow:0 2px 8px #18223508}
+.filetop{display:flex;gap:11px;align-items:center}.fileicon{width:45px;height:50px;flex:none;display:grid;place-items:center;background:var(--soft);border-radius:10px;font-size:22px}.filename{font-weight:700;overflow-wrap:anywhere;line-height:1.25}.meta{font-size:12px;color:var(--muted);margin-top:5px}
+.tag{display:inline-block;background:#edf2fa;color:#40516d;padding:4px 8px;border-radius:99px;font-size:11px;margin-top:10px}
+.actions{display:flex;gap:7px;margin-top:13px}.actions button,.actions a{flex:1;text-align:center;text-decoration:none;border:1px solid var(--line);border-radius:9px;background:white;color:var(--ink);padding:8px 5px;font-size:13px;cursor:pointer}.actions .delete{color:var(--danger)}
+.empty{background:var(--panel);border:1px dashed #c5cfdd;border-radius:16px;padding:32px 18px;text-align:center;color:var(--muted)}.empty .big{font-size:36px;margin-bottom:8px}
+.hint{font-size:12px;color:var(--muted);margin:16px 3px;line-height:1.5}
+dialog{width:min(460px,calc(100% - 28px));border:0;border-radius:18px;padding:20px;box-shadow:0 20px 80px #0003}dialog::backdrop{background:#10182888}dialog h2{margin:0 0 14px}dialog label{display:block;font-size:13px;color:var(--muted);margin:12px 0 5px}dialog input,dialog select{width:100%}.dialog-actions{display:flex;gap:9px;margin-top:18px}.dialog-actions button{flex:1}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:8px 16px 24px}
+@media(max-width:480px){header{padding-top:19px}h1{font-size:25px}.toolbar>*{width:100%}.stats{gap:7px}.stat{padding:10px}.stat strong{font-size:19px}}
+</style>
+</head>
+<body>
+<header><div class="head"><div class="eyebrow">Your personal study space</div><h1>📚 My Bookshelf</h1><p>Keep your books, PDFs, notes and study files together.</p></div></header>
+<main>
+  <div class="toolbar">
+    <input id="search" type="search" placeholder="Search your books and files…" aria-label="Search files">
+    <select id="filter" aria-label="Filter by category"><option value="">All categories</option><option>Books</option><option>Notes</option><option>Question Papers</option><option>Other</option></select>
+    <button class="btn" id="addBtn">＋ Add files</button>
+  </div>
+  <input id="fileInput" type="file" multiple hidden>
+  <div class="stats"><div class="stat"><strong id="count">0</strong><span>Saved files</span></div><div class="stat"><strong id="size">0 B</strong><span>Storage used</span></div></div>
+  <div class="section-title"><h2>Your library</h2><span id="resultLabel" class="meta">0 items</span></div>
+  <div id="library" class="grid"></div>
+  <p class="hint">🔒 Your files are saved in this browser on this phone, not uploaded to a server. Keep a separate backup of important files. Clearing browser/app data may erase your library.</p>
+</main>
+<footer>My Bookshelf · Private, simple, and made for studying</footer>
+<dialog id="categoryDialog">
+  <form method="dialog" id="categoryForm">
+    <h2>Organise your files</h2>
+    <p id="pendingName" class="meta"></p>
+    <label for="category">Category</label>
+    <select id="category"><option>Books</option><option>Notes</option><option>Question Papers</option><option>Other</option></select>
+    <div class="dialog-actions"><button type="button" class="btn secondary" id="cancelAdd">Cancel</button><button type="submit" class="btn">Save file</button></div>
+  </form>
+</dialog>
+<script>
+const DB_NAME='my-bookshelf-db', STORE='files';
+let db, pendingFiles=[], allFiles=[];
+const $=id=>document.getElementById(id);
+function openDB(){return new Promise((resolve,reject)=>{const req=indexedDB.open(DB_NAME,1);req.onupgradeneeded=()=>{const d=req.result;if(!d.objectStoreNames.contains(STORE))d.createObjectStore(STORE,{keyPath:'id',autoIncrement:true})};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error)})}
+function store(mode='readonly'){return db.transaction(STORE,mode).objectStore(STORE)}
+function getAll(){return new Promise((resolve,reject)=>{const r=store().getAll();r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)})}
+function humanSize(n){if(n<1024)return n+' B';if(n<1024**2)return (n/1024).toFixed(1)+' KB';if(n<1024**3)return (n/1024**2).toFixed(1)+' MB';return (n/1024**3).toFixed(2)+' GB'}
+function iconFor(name,type){const ext=(name.split('.').pop()||'').toLowerCase();if(type.includes('pdf')||ext==='pdf')return '📕';if(['epub','mobi'].includes(ext))return '📘';if(['jpg','jpeg','png','webp'].includes(ext))return '🖼️';if(['doc','docx','txt','md'].includes(ext))return '📝';if(['ppt','pptx'].includes(ext))return '📊';return '📄'}
+function safe(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+async function refresh(){allFiles=await getAll();$('count').textContent=allFiles.length;$('size').textContent=humanSize(allFiles.reduce((a,f)=>a+f.size,0));render()}
+function render(){const q=$('search').value.trim().toLowerCase(),cat=$('filter').value;const items=allFiles.filter(f=>(!cat||f.category===cat)&&(!q||f.name.toLowerCase().includes(q)||f.category.toLowerCase().includes(q)));$('resultLabel').textContent=items.length+' item'+(items.length===1?'':'s');const lib=$('library');if(!items.length){lib.className='';lib.innerHTML=`<div class="empty"><div class="big">📚</div><strong>${allFiles.length?'No matching files':'Your bookshelf is empty'}</strong><p>${allFiles.length?'Try a different search or category.':'Tap “Add files” to save your first book, PDF or notes.'}</p></div>`;return}lib.className='grid';lib.innerHTML=items.sort((a,b)=>b.added-a.added).map(f=>`<article class="file"><div class="filetop"><div class="fileicon">${iconFor(f.name,f.type)}</div><div style="min-width:0"><div class="filename">${safe(f.name)}</div><div class="meta">${humanSize(f.size)} · ${new Date(f.added).toLocaleDateString()}</div></div></div><span class="tag">${safe(f.category)}</span><div class="actions"><button data-open="${f.id}">Open</button><button data-download="${f.id}">Download</button><button class="delete" data-delete="${f.id}">Delete</button></div></article>`).join('');lib.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openFile(+b.dataset.open));lib.querySelectorAll('[data-download]').forEach(b=>b.onclick=()=>downloadFile(+b.dataset.download));lib.querySelectorAll('[data-delete]').forEach(b=>b.onclick=()=>deleteFile(+b.dataset.delete))}
+function byId(id){return allFiles.find(f=>f.id===id)}
+function openFile(id){const f=byId(id);if(!f)return;const url=URL.createObjectURL(f.blob);const w=window.open(url,'_blank');if(!w){const a=document.createElement('a');a.href=url;a.download=f.name;a.click()}setTimeout(()=>URL.revokeObjectURL(url),60000)}
+function downloadFile(id){const f=byId(id);if(!f)return;const url=URL.createObjectURL(f.blob),a=document.createElement('a');a.href=url;a.download=f.name;a.click();setTimeout(()=>URL.revokeObjectURL(url),10000)}
+async function deleteFile(id){const f=byId(id);if(!f||!confirm('Delete "'+f.name+'"? This cannot be undone.'))return;await new Promise((resolve,reject)=>{const r=store('readwrite').delete(id);r.onsuccess=resolve;r.onerror=()=>reject(r.error)});refresh()}
+$('addBtn').onclick=()=>$('fileInput').click();
+$('fileInput').onchange=()=>{pendingFiles=[...$('fileInput').files];if(!pendingFiles.length)return;$('pendingName').textContent=pendingFiles.length===1?pendingFiles[0].name:pendingFiles.length+' files selected. They will all use this category.';$('categoryDialog').showModal()};
+$('cancelAdd').onclick=()=>{$('categoryDialog').close();$('fileInput').value='';pendingFiles=[]};
+$('categoryForm').onsubmit=async e=>{e.preventDefault();const category=$('category').value;for(const f of pendingFiles){await new Promise((resolve,reject)=>{const r=store('readwrite').add({name:f.name,type:f.type||'',size:f.size,added:Date.now(),category,blob:f});r.onsuccess=resolve;r.onerror=()=>reject(r.error)})}$('categoryDialog').close();$('fileInput').value='';pendingFiles=[];await refresh()};
+$('search').oninput=render;$('filter').onchange=render;
+(async()=>{try{db=await openDB();await refresh()}catch(e){$('library').innerHTML='<div class="empty">Sorry, storage could not be opened in this browser. Try opening this app in Chrome.</div>'}})();
+if('serviceWorker' in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{});
+let deferredInstall;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstall=e;const b=document.createElement('button');b.className='btn secondary';b.textContent='Install app';b.onclick=async()=>{deferredInstall.prompt();deferredInstall=null;b.remove()};document.querySelector('.toolbar').appendChild(b)});
+</script>
+</body></html>
