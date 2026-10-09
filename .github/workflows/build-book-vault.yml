@@ -64,8 +64,8 @@ jobs:
           EOF
           npx cap add android
           npx cap sync android
-          mkdir -p android/app/src/main/java/com/ssk/bookvault
-          cp android-custom/MainActivity.java android/app/src/main/java/com/ssk/bookvault/MainActivity.java
+          mkdir -p android/app/src/main/java/com/ssk/readingvault
+          cp android-custom/MainActivity.java android/app/src/main/java/com/ssk/readingvault/MainActivity.java
           python3 - <<'PY'
           import xml.etree.ElementTree as ET
           p = "android/app/src/main/AndroidManifest.xml"
