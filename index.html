@@ -146,7 +146,7 @@ $('pdfZoomOut').onclick=()=>{showPdfControls();if(activePdf){pdfScale=Math.max(0
 $('pdfClose').onclick=()=>{clearTimeout(pdfControlsTimer);$('pdfViewer').classList.remove('active','controls-hidden');closePdfDocument();$('pdfStatus').textContent='';};
 $('pdfStage').addEventListener('click',()=>{if(suppressStageClick){suppressStageClick=false;return}togglePdfControls()});
 $('pdfStage').addEventListener('scroll',()=>{if($('pdfViewer').classList.contains('active'))showPdfControls()},{passive:true});
-$('pdfViewer').addEventListener('pointerdown',showPdfControls,{passive:true});
+document.querySelector('.pdfbar').addEventListener('pointerdown',showPdfControls,{passive:true});
 function touchDistance(touches){const dx=touches[0].clientX-touches[1].clientX,dy=touches[0].clientY-touches[1].clientY;return Math.hypot(dx,dy)}
 $('pdfCanvas').addEventListener('touchstart',e=>{if(e.touches.length===2&&activePdf){e.preventDefault();clearTimeout(pdfControlsTimer);$('pdfViewer').classList.remove('controls-hidden');pinchState={distance:Math.max(1,touchDistance(e.touches)),startScale:pdfScale,currentScale:pdfScale};$('pdfCanvas').style.transformOrigin='center center';suppressStageClick=true;showPdfControls()}},{passive:false});
 $('pdfCanvas').addEventListener('touchmove',e=>{if(e.touches.length===2&&pinchState){e.preventDefault();const factor=touchDistance(e.touches)/pinchState.distance;pinchState.currentScale=Math.max(.5,Math.min(3,pinchState.startScale*factor));$('pdfCanvas').style.transform='scale('+(pinchState.currentScale/pinchState.startScale)+')'}},{passive:false});
