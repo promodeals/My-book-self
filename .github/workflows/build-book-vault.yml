@@ -1,4 +1,4 @@
-name: Build Book Vault APK
+name: Build Reading Vault APK
 
 on:
   workflow_dispatch:
@@ -39,7 +39,7 @@ jobs:
           cp index.html www/
           cat > package.json <<'EOF'
           {
-            "name": "book-vault-android",
+            "name": "reading-vault-android",
             "version": "1.0.0",
             "private": true,
             "description": "A new private on-device book and document library",
@@ -55,8 +55,8 @@ jobs:
           npm install
           cat > capacitor.config.json <<'EOF'
           {
-            "appId": "com.ssk.bookvault",
-            "appName": "Book Vault",
+            "appId": "com.ssk.readingvault",
+            "appName": "Reading Vault",
             "webDir": "www",
             "bundledWebRuntime": false,
             "server": { "androidScheme": "https" }
@@ -95,9 +95,9 @@ jobs:
           "$BUILD_TOOLS/apksigner" verify --verbose app/build/outputs/apk/debug/app-debug.apk
           "$BUILD_TOOLS/aapt" dump badging app/build/outputs/apk/debug/app-debug.apk | head -n 3
 
-      - name: Upload Book Vault APK
+      - name: Upload Reading Vault APK
         uses: actions/upload-artifact@v4
         with:
-          name: book-vault-apk
+          name: reading-vault-apk
           path: fresh-book-vault/android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
