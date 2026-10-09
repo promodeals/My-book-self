@@ -94,15 +94,19 @@ async function renderPdfPage(){
   const page=await renderPdf.getPage(pdfPage);
   if(renderPdf!==activePdf){page.cleanup();return}
   const canvas=$('pdfCanvas'),cssViewport=page.getViewport({scale:pdfScale});
-  const maxPixels=Math.min(4000000,Math.max(1000000,(window.innerWidth||900)*(window.innerHeight||700)*2));
-  const pixelRatio=Math.min(window.devicePixelRatio||1,Math.sqrt(maxPixels/(cssViewport.width*cssViewport.height))||1);
-  const viewport=page.getViewport({scale:pdfScale*pixelRatio}),ctx=canvas.getContext('2d',{alpha:false});
-  if(!ctx)throw new Error('Canvas 2D context unavailable');
+  // Android WebView can reject opaque/alpha:false canvases with "Unsupported pixel format".
+  // Use the default RGBA 2D context and cap the backing bitmap conservatively for large pages.
+  const maxPixels=Math.min(2500000,Math.max(800000,(window.innerWidth||900)*(window.innerHeight||700)));
+  const pixelRatio=Math.max(0.5,Math.min(window.devicePixelRatio||1,Math.sqrt(maxPixels/(cssViewport.width*cssViewport.height))||1));
+  const viewport=page.getViewport({scale:pdfScale*pixelRatio});
   canvas.width=Math.max(1,Math.floor(viewport.width));canvas.height=Math.max(1,Math.floor(viewport.height));
   canvas.style.width=Math.floor(cssViewport.width)+'px';canvas.style.height=Math.floor(cssViewport.height)+'px';
   canvas.style.display='inline-block';$('pdfStatus').textContent='Rendering page…';$('pdfPage').textContent=pdfPage+' / '+renderPdf.numPages;
+  const ctx=canvas.getContext('2d');
+  if(!ctx)throw new Error('Canvas 2D context unavailable');
   pdfRenderTask=page.render({canvasContext:ctx,viewport,background:'rgb(255,255,255)'});
   await pdfRenderTask.promise;
+  if(renderPdf!==activePdf)return;
   if(renderPdf===activePdf)$('pdfStatus').textContent='';
   pdfRenderTask=null;page.cleanup();
  }catch(e){if(e?.name!=='RenderingCancelledException'){console.error('PDF page render failed',e);$('pdfStatus').textContent='Could not render this page. Try zooming out or reopening the book.'}}
