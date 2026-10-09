@@ -7,6 +7,7 @@ on:
       - 'index.html'
       - 'manifest.json'
       - 'service-worker.js'
+      - 'bookshelf-background.jpg'
       - 'android-custom/**'
       - '.github/workflows/build-apk.yml'
 
@@ -31,7 +32,17 @@ jobs:
       - name: Prepare Capacitor Android app
         run: |
           mkdir -p www
-          cp index.html manifest.json service-worker.js icon-192.png icon-512.png www/
+          python3 -m pip install --quiet pillow
+          python3 - <<'PY'
+          from PIL import Image
+          src = Image.open("bookshelf-background.jpg").convert("RGB")
+          side = min(src.size)
+          left, top = (src.width - side) // 2, (src.height - side) // 2
+          art = src.crop((left, top, left + side, top + side))
+          for size in (192, 512):
+              art.resize((size, size), Image.Resampling.LANCZOS).save("icon-" + str(size) + ".png", optimize=True)
+          PY
+          cp index.html manifest.json service-worker.js icon-192.png icon-512.png bookshelf-background.jpg www/
           mkdir -p www/pdfjs
           cat > package.json <<'EOF'
           {
@@ -64,6 +75,23 @@ jobs:
           EOF
           npx cap add android
           npx cap sync android
+          python3 - <<'PY'
+          from PIL import Image
+          from pathlib import Path
+          src = Image.open("bookshelf-background.jpg").convert("RGB")
+          side = min(src.size)
+          left, top = (src.width - side) // 2, (src.height - side) // 2
+          art = src.crop((left, top, left + side, top + side))
+          res = Path("android/app/src/main/res")
+          for folder in res.glob("mipmap-*"):
+              for p in folder.glob("ic_launcher*.png"):
+                  try:
+                      with Image.open(p) as old:
+                          size = old.size
+                      art.resize(size, Image.Resampling.LANCZOS).save(p, format="PNG", optimize=True)
+                  except Exception as e:
+                      print("Skipping icon", p, e)
+          PY
           mkdir -p android/app/src/main/java/com/promodeals/mybookshelf/installfix2
           cp android-custom/FileSharePlugin.java android-custom/MainActivity.java android/app/src/main/java/com/promodeals/mybookshelf/installfix2/
           sed -i 's/^package com\.promodeals\.mybookshelf;/package com.promodeals.mybookshelf.installfix2;/' android/app/src/main/java/com/promodeals/mybookshelf/installfix2/FileSharePlugin.java android/app/src/main/java/com/promodeals/mybookshelf/installfix2/MainActivity.java
