@@ -79,8 +79,8 @@ async function openFile(id){
  if((f.type||'').includes('pdf')||f.name.toLowerCase().endsWith('.pdf')){
   if(!window.pdfjsLib){alert('The PDF reader is not available. Please update the Books app and try again.');return}
   $('pdfViewer').classList.add('active');$('pdfTitle').textContent=f.name;$('pdfStatus').textContent='Loading PDF…';$('pdfCanvas').style.display='none';
-  try{pdfjsLib.GlobalWorkerOptions.workerSrc=location.protocol==='file:'?'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js':'./pdfjs/pdf.worker.min.js';activePdf=await pdfjsLib.getDocument({data:await f.blob.arrayBuffer()}).promise;pdfPage=1;pdfScale=1;await renderPdfPage()}
-  catch(e){console.error('PDF open failed',e);$('pdfStatus').textContent='This PDF could not be opened. It may be damaged or password-protected.';$('pdfCanvas').style.display='none'}
+  try{pdfjsLib.GlobalWorkerOptions.workerSrc=window.Capacitor?.isNativePlatform?.()?'./pdfjs/pdf.worker.min.js':'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';activePdf=await pdfjsLib.getDocument({data:await f.blob.arrayBuffer()}).promise;pdfPage=1;pdfScale=1;await renderPdfPage()}
+  catch(e){console.error('PDF open failed',e);$('pdfStatus').textContent=(e?.name==='PasswordException'?'This PDF is password-protected.':'This PDF could not be opened. It may be damaged, unsupported, or too large for available memory.');$('pdfCanvas').style.display='none'}
   return;
  }
  const url=URL.createObjectURL(f.blob);const w=window.open(url,'_blank');if(!w){const a=document.createElement('a');a.href=url;a.download=f.name;a.click()}setTimeout(()=>URL.revokeObjectURL(url),60000)
