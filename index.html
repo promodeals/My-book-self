@@ -73,49 +73,71 @@ function safe(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;'
 async function refresh(){allFiles=await getAll();$('count').textContent=allFiles.length;$('size').textContent=humanSize(allFiles.reduce((a,f)=>a+f.size,0));render()}
 function render(){const q=$('search').value.normalize('NFKC').trim().toLocaleLowerCase(),cat=$('filter').value;const items=allFiles.filter(f=>(!cat||f.category===cat)&&(!q||[f.name,f.category,f.type,(f.name.split('.').pop()||'')].some(v=>String(v||'').normalize('NFKC').toLocaleLowerCase().includes(q))));$('resultLabel').textContent=items.length+' item'+(items.length===1?'':'s');const lib=$('library');if(!items.length){lib.className='';lib.innerHTML=`<div class="empty"><div class="big">📚</div><strong>${allFiles.length?'No matching files':'Your bookshelf is empty'}</strong><p>${allFiles.length?'Try a different search or category.':'Tap “Add files” or “Import from device / Google Files” to choose a book, PDF or notes.'}</p></div>`;return}lib.className='grid';lib.innerHTML=items.sort((a,b)=>b.added-a.added).map(f=>`<article class="file"><div class="filetop"><div class="fileicon">${iconFor(f.name,f.type)}</div><div style="min-width:0"><div class="filename">${safe(f.name)}</div><div class="meta">${humanSize(f.size)} · ${new Date(f.added).toLocaleDateString()}</div></div></div><span class="tag">${safe(f.category)}</span><div class="actions"><button data-open="${f.id}">Open</button><button data-download="${f.id}">Download</button><button class="delete" data-delete="${f.id}">Delete</button></div></article>`).join('');lib.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openFile(+b.dataset.open));lib.querySelectorAll('[data-download]').forEach(b=>b.onclick=()=>downloadFile(+b.dataset.download));lib.querySelectorAll('[data-delete]').forEach(b=>b.onclick=()=>deleteFile(+b.dataset.delete))}
 function byId(id){return allFiles.find(f=>f.id===id)}
-let activePdf=null,pdfPage=1,pdfScale=1,pdfRenderTask=null;
+let activePdf=null,pdfPage=1,pdfScale=1,pdfRenderTask=null,pdfRenderToken=0;
+function closePdfDocument(){
+ pdfRenderToken++;
+ const task=pdfRenderTask;pdfRenderTask=null;
+ if(task){try{task.cancel()}catch(_){}}
+ const doc=activePdf;activePdf=null;
+ if(doc){try{const p=doc.destroy();if(p&&p.catch)p.catch(()=>{})}catch(_){}}
+ $('pdfCanvas').style.display='none';
+}
 async function openFile(id){
  const f=byId(id);if(!f)return;
  if((f.type||'').includes('pdf')||f.name.toLowerCase().endsWith('.pdf')){
   if(!window.pdfjsLib){alert('The PDF reader is not available. Please update the Books app and try again.');return}
+  closePdfDocument();
   $('pdfViewer').classList.add('active');$('pdfTitle').textContent=f.name;$('pdfStatus').textContent='Loading PDF…';$('pdfCanvas').style.display='none';
-  try{pdfjsLib.GlobalWorkerOptions.workerSrc=window.Capacitor?.isNativePlatform?.()?'./pdfjs/pdf.worker.min.js':'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';activePdf=await pdfjsLib.getDocument({data:await f.blob.arrayBuffer()}).promise;pdfPage=1;pdfScale=1;await renderPdfPage()}
-  catch(e){console.error('PDF open failed',e);$('pdfStatus').textContent=(e?.name==='PasswordException'?'This PDF is password-protected.':'This PDF could not be opened. It may be damaged, unsupported, or too large for available memory.');$('pdfCanvas').style.display='none'}
+  try{
+   pdfjsLib.GlobalWorkerOptions.workerSrc=window.Capacitor?.isNativePlatform?.()?'./pdfjs/pdf.worker.min.js':'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+   const loadingTask=pdfjsLib.getDocument({data:await f.blob.arrayBuffer(),useSystemFonts:true});
+   const doc=await loadingTask.promise;
+   if(!$('pdfViewer').classList.contains('active')){try{await doc.destroy()}catch(_){};return}
+   activePdf=doc;pdfPage=1;pdfScale=1;await renderPdfPage();
+  }catch(e){console.error('PDF open failed',e);if($('pdfViewer').classList.contains('active')){$('pdfStatus').textContent=(e?.name==='PasswordException'?'This PDF is password-protected.':'This PDF could not be opened. It may be damaged, unsupported, or too large for available memory.');$('pdfCanvas').style.display='none'}}
   return;
  }
  const url=URL.createObjectURL(f.blob);const w=window.open(url,'_blank');if(!w){const a=document.createElement('a');a.href=url;a.download=f.name;a.click()}setTimeout(()=>URL.revokeObjectURL(url),60000)
 }
 async function renderPdfPage(){
  if(!activePdf)return;
- const renderPdf=activePdf;
+ const token=++pdfRenderToken,renderPdf=activePdf;
+ let page=null,task=null;
  try{
-  if(pdfRenderTask){try{pdfRenderTask.cancel()}catch(_){};try{await pdfRenderTask.promise}catch(_){};pdfRenderTask=null}
-  if(renderPdf!==activePdf)return;
-  const page=await renderPdf.getPage(pdfPage);
-  if(renderPdf!==activePdf){page.cleanup();return}
+  const previousTask=pdfRenderTask;
+  if(previousTask){try{previousTask.cancel()}catch(_){};try{await previousTask.promise}catch(_){};if(pdfRenderTask===previousTask)pdfRenderTask=null}
+  if(token!==pdfRenderToken||renderPdf!==activePdf)return;
+  page=await renderPdf.getPage(pdfPage);
+  if(token!==pdfRenderToken||renderPdf!==activePdf){page.cleanup();return}
   const canvas=$('pdfCanvas'),cssViewport=page.getViewport({scale:pdfScale});
-  // Android WebView can reject opaque/alpha:false canvases with "Unsupported pixel format".
-  // Use the default RGBA 2D context and cap the backing bitmap conservatively for large pages.
-  const maxPixels=Math.min(2500000,Math.max(800000,(window.innerWidth||900)*(window.innerHeight||700)));
+  // RGBA canvas avoids Android WebView's unsupported pixel-format error.
+  // Limit backing pixels to reduce memory spikes and blank pages on large PDFs.
+  const maxPixels=Math.min(2000000,Math.max(600000,(window.innerWidth||900)*(window.innerHeight||700)));
   const pixelRatio=Math.max(0.5,Math.min(window.devicePixelRatio||1,Math.sqrt(maxPixels/(cssViewport.width*cssViewport.height))||1));
   const viewport=page.getViewport({scale:pdfScale*pixelRatio});
   canvas.width=Math.max(1,Math.floor(viewport.width));canvas.height=Math.max(1,Math.floor(viewport.height));
   canvas.style.width=Math.floor(cssViewport.width)+'px';canvas.style.height=Math.floor(cssViewport.height)+'px';
-  canvas.style.display='inline-block';$('pdfStatus').textContent='Rendering page…';$('pdfPage').textContent=pdfPage+' / '+renderPdf.numPages;
   const ctx=canvas.getContext('2d');
   if(!ctx)throw new Error('Canvas 2D context unavailable');
-  pdfRenderTask=page.render({canvasContext:ctx,viewport,background:'rgb(255,255,255)'});
-  await pdfRenderTask.promise;
-  if(renderPdf!==activePdf)return;
-  if(renderPdf===activePdf)$('pdfStatus').textContent='';
-  pdfRenderTask=null;page.cleanup();
- }catch(e){if(e?.name!=='RenderingCancelledException'){console.error('PDF page render failed',e);$('pdfStatus').textContent='Could not render this page. Try zooming out or reopening the book.'}}
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
+  canvas.style.display='inline-block';$('pdfStatus').textContent='Rendering page…';$('pdfPage').textContent=pdfPage+' / '+renderPdf.numPages;
+  task=page.render({canvasContext:ctx,viewport,background:'rgb(255,255,255)'});
+  pdfRenderTask=task;
+  await task.promise;
+  if(token!==pdfRenderToken||renderPdf!==activePdf)return;
+  $('pdfStatus').textContent='';
+ }catch(e){
+  if(e?.name!=='RenderingCancelledException'&&token===pdfRenderToken&&renderPdf===activePdf){console.error('PDF page render failed',e);$('pdfStatus').textContent='Could not render this page. Try zooming out or reopening the book.';$('pdfCanvas').style.display='none'}
+ }finally{
+  if(pdfRenderTask===task)pdfRenderTask=null;
+  if(page){try{page.cleanup()}catch(_){}}
+ }
 }
 $('pdfPrev').onclick=()=>{if(activePdf&&pdfPage>1){pdfPage--;renderPdfPage()}};
 $('pdfNext').onclick=()=>{if(activePdf&&pdfPage<activePdf.numPages){pdfPage++;renderPdfPage()}};
 $('pdfZoomIn').onclick=()=>{if(activePdf){pdfScale=Math.min(3,pdfScale+0.2);renderPdfPage()}};
 $('pdfZoomOut').onclick=()=>{if(activePdf){pdfScale=Math.max(0.5,pdfScale-0.2);renderPdfPage()}};
-$('pdfClose').onclick=()=>{$('pdfViewer').classList.remove('active');activePdf=null;if(pdfRenderTask){pdfRenderTask.cancel();pdfRenderTask=null}$('pdfCanvas').style.display='none';$('pdfStatus').textContent='';};
+$('pdfClose').onclick=()=>{$('pdfViewer').classList.remove('active');closePdfDocument();$('pdfStatus').textContent='';};
 
 function downloadFile(id){const f=byId(id);if(!f)return;const url=URL.createObjectURL(f.blob),a=document.createElement('a');a.href=url;a.download=f.name;a.click();setTimeout(()=>URL.revokeObjectURL(url),10000)}
 async function deleteFile(id){const f=byId(id);if(!f||!confirm('Delete "'+f.name+'"? This cannot be undone.'))return;await new Promise((resolve,reject)=>{const r=store('readwrite').delete(id);r.onsuccess=resolve;r.onerror=()=>reject(r.error)});refresh()}
