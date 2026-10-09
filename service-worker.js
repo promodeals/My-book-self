@@ -1,4 +1,4 @@
-const CACHE_NAME = "my-bookshelf-v8";
+const CACHE_NAME = "my-bookshelf-v9";
 const APP_SHELL = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png"];
 
 function saveSharedFile(file) {
@@ -29,7 +29,21 @@ function saveSharedFile(file) {
 }
 
 self.addEventListener("install", event => {
-  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)));
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    await cache.addAll(APP_SHELL);
+    // Cache the PDF.js engine when online so PDF reading can keep working offline.
+    // These are optional: a CDN outage must not prevent the app shell from installing.
+    await Promise.all([
+      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"
+    ].map(async url => {
+      try {
+        const response = await fetch(url, { mode: "cors", cache: "no-cache" });
+        if (response.ok) await cache.put(url, response);
+      } catch (_) {}
+    }));
+  })());
   self.skipWaiting();
 });
 
