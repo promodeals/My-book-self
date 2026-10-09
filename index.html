@@ -146,6 +146,8 @@ $('readerMore').onclick=()=>{showPdfControls();$('readerMenu').hidden=!$('reader
 document.querySelectorAll('[data-reader-action]').forEach(b=>b.addEventListener('click',()=>{const action=b.dataset.readerAction;$('readerMenu').hidden=true;if(action==='fit'){pdfScale=1;$('pdfStage').scrollTo(0,0);renderPdfPage()}else if(action==='width'){pdfScale=1.2;$('pdfStage').scrollTo(0,0);renderPdfPage()}else if(action==='first'){pdfPage=1;$('pdfStage').scrollTo(0,0);renderPdfPage()}showPdfControls()}));
 document.addEventListener('pointerdown',e=>{if(!e.target.closest('#readerMore')&&!e.target.closest('#readerMenu'))$('readerMenu').hidden=true});
 window.handleNativeBack=function(){if($('pdfViewer').classList.contains('active')){closeReader();return true}return false};
+// Keep the reader's native Back action deterministic: close the PDF overlay and return to the library view.
+window.addEventListener('mybookshelf-back',()=>{if($('pdfViewer').classList.contains('active'))closeReader()});
 window.addEventListener('keydown',e=>{if((e.key==='Escape'||e.key==='Backspace')&&$('pdfViewer').classList.contains('active')){e.preventDefault();closeReader()}});
 window.addEventListener('popstate',()=>{if($('pdfViewer').classList.contains('active'))closeReader()});
 $('pdfStage').addEventListener('click',()=>{if(suppressStageClick){suppressStageClick=false;return}togglePdfControls()});
