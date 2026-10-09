@@ -76,7 +76,7 @@ jobs:
           npx cap add android
           npx cap sync android
           python3 - <<'PY'
-          from PIL import Image
+          from PIL import Image, ImageOps
           from pathlib import Path
           src = Image.open("bookshelf-background.jpg").convert("RGB")
           side = min(src.size)
@@ -91,6 +91,16 @@ jobs:
                       art.resize(size, Image.Resampling.LANCZOS).save(p, format="PNG", optimize=True)
                   except Exception as e:
                       print("Skipping icon", p, e)
+          # Use the supplied artwork in Android's native launch screen too.
+          splash_files = list(res.glob("drawable*/splash.png")) + [res / "drawable" / "splash.png"]
+          for p in splash_files:
+              if p.exists():
+                  try:
+                      with Image.open(p) as old:
+                          size = old.size
+                      ImageOps.fit(src, size, method=Image.Resampling.LANCZOS).save(p, format="PNG", optimize=True)
+                  except Exception as e:
+                      print("Skipping splash asset", p, e)
           PY
           mkdir -p android/app/src/main/java/com/promodeals/mybookshelf/installfix2
           cp android-custom/FileSharePlugin.java android-custom/MainActivity.java android/app/src/main/java/com/promodeals/mybookshelf/installfix2/
