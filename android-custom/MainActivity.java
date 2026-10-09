@@ -7,6 +7,7 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowInsets;
 import android.view.WindowInsetsController;
+import androidx.activity.OnBackPressedCallback;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
@@ -14,6 +15,23 @@ public class MainActivity extends BridgeActivity {
     public void onCreate(Bundle savedInstanceState) {
         registerPlugin(FileSharePlugin.class);
         super.onCreate(savedInstanceState);
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                if (getBridge() == null || getBridge().getWebView() == null) {
+                    finish();
+                    return;
+                }
+                getBridge().getWebView().evaluateJavascript(
+                    "(window.handleNativeBack && window.handleNativeBack()) ? 'handled' : 'not-handled'",
+                    value -> {
+                        if (!"\\\"handled\\\"".equals(value) && !"handled".equals(value)) {
+                            finish();
+                        }
+                    }
+                );
+            }
+        });
         enterImmersiveReaderMode();
         getWindow().getDecorView().setOnSystemUiVisibilityChangeListener(visibility -> {
             if ((visibility & View.SYSTEM_UI_FLAG_FULLSCREEN) == 0) {
