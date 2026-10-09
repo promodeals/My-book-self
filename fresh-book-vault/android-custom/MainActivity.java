@@ -1,4 +1,4 @@
-package com.ssk.bookvault;
+package com.ssk.readingvault;
 
 import android.content.Intent;
 import android.net.Uri;
