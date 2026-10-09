@@ -50,8 +50,8 @@ jobs:
           npm install
           cat > capacitor.config.json <<'EOF'
           {
-            "appId": "com.promodeals.mybookshelf.fixed",
-            "appName": "My Bookshelf Fixed",
+            "appId": "com.promodeals.mybookshelf.installfix",
+            "appName": "My Bookshelf",
             "webDir": "www",
             "bundledWebRuntime": false,
             "server": {
@@ -61,9 +61,9 @@ jobs:
           EOF
           npx cap add android
           npx cap sync android
-          mkdir -p android/app/src/main/java/com/promodeals/mybookshelf/fixed
-          cp android-custom/FileSharePlugin.java android-custom/MainActivity.java android/app/src/main/java/com/promodeals/mybookshelf/fixed/
-          sed -i 's/^package com\.promodeals\.mybookshelf;/package com.promodeals.mybookshelf.fixed;/' android/app/src/main/java/com/promodeals/mybookshelf/fixed/FileSharePlugin.java android/app/src/main/java/com/promodeals/mybookshelf/fixed/MainActivity.java
+          mkdir -p android/app/src/main/java/com/promodeals/mybookshelf/installfix
+          cp android-custom/FileSharePlugin.java android-custom/MainActivity.java android/app/src/main/java/com/promodeals/mybookshelf/installfix/
+          sed -i 's/^package com\.promodeals\.mybookshelf;/package com.promodeals.mybookshelf.installfix;/' android/app/src/main/java/com/promodeals/mybookshelf/installfix/FileSharePlugin.java android/app/src/main/java/com/promodeals/mybookshelf/installfix/MainActivity.java
           python3 - <<'PY'
           import xml.etree.ElementTree as ET
           path = "android/app/src/main/AndroidManifest.xml"
@@ -99,10 +99,12 @@ jobs:
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug
+          "$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -n1)/apksigner" verify --verbose app/build/outputs/apk/debug/app-debug.apk
+          "$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -n1)/aapt" dump badging app/build/outputs/apk/debug/app-debug.apk | head -n 3
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: my-bookshelf-fixed-apk
+          name: my-bookshelf-installfix-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
