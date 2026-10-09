@@ -113,7 +113,7 @@ async function renderPdfPage(){
   if(token!==pdfRenderToken||renderPdf!==activePdf){page.cleanup();return}
   const canvas=$('pdfCanvas'),stage=$('pdfStage');
   const baseViewport=page.getViewport({scale:1});
-  const availableWidth=Math.max(160,(stage.clientWidth||window.innerWidth)-20);const availableHeight=Math.max(220,(stage.clientHeight||window.innerHeight)-Math.min(100,(window.innerHeight||700)*.13));const fitScale=Math.min(1.5,availableWidth/baseViewport.width,availableHeight/baseViewport.height);
+  const availableWidth=Math.max(160,(stage.clientWidth||window.innerWidth)-12);const fitScale=Math.min(1.5,availableWidth/baseViewport.width);
   const cssViewport=page.getViewport({scale:pdfScale*fitScale});
   // RGBA canvas avoids Android WebView's unsupported pixel-format error.
   // Limit backing pixels to reduce memory spikes and blank pages on large PDFs.
