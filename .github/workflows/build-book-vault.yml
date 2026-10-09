@@ -1,0 +1,103 @@
+name: Build Book Vault APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - fresh-book-vault
+    paths:
+      - 'fresh-book-vault/**'
+      - '.github/workflows/build-book-vault.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout fresh app source
+        uses: actions/checkout@v4
+        with:
+          ref: fresh-book-vault
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Create native Android project
+        working-directory: fresh-book-vault
+        run: |
+          mkdir -p www
+          cp index.html www/
+          cat > package.json <<'EOF'
+          {
+            "name": "book-vault-android",
+            "version": "1.0.0",
+            "private": true,
+            "description": "A new private on-device book and document library",
+            "dependencies": {
+              "@capacitor/android": "^7.4.3",
+              "@capacitor/core": "^7.4.3"
+            },
+            "devDependencies": {
+              "@capacitor/cli": "^7.4.3"
+            }
+          }
+          EOF
+          npm install
+          cat > capacitor.config.json <<'EOF'
+          {
+            "appId": "com.ssk.bookvault",
+            "appName": "Book Vault",
+            "webDir": "www",
+            "bundledWebRuntime": false,
+            "server": { "androidScheme": "https" }
+          }
+          EOF
+          npx cap add android
+          npx cap sync android
+          mkdir -p android/app/src/main/java/com/ssk/bookvault
+          cp android-custom/MainActivity.java android/app/src/main/java/com/ssk/bookvault/MainActivity.java
+          python3 - <<'PY'
+          import xml.etree.ElementTree as ET
+          p = "android/app/src/main/AndroidManifest.xml"
+          ET.register_namespace("android", "http://schemas.android.com/apk/res/android")
+          ns = "{http://schemas.android.com/apk/res/android}"
+          tree = ET.parse(p)
+          root = tree.getroot()
+          app = root.find("application")
+          activity = next((a for a in app.findall("activity") if a.get(ns+"name","").endswith("MainActivity")), None)
+          if activity is None:
+              raise SystemExit("Generated MainActivity missing from Android manifest")
+          activity.set(ns+"launchMode", "singleTask")
+          for action in ("android.intent.action.SEND", "android.intent.action.SEND_MULTIPLE"):
+              filt = ET.SubElement(activity, "intent-filter")
+              ET.SubElement(filt, "action", {ns+"name": action})
+              ET.SubElement(filt, "category", {ns+"name": "android.intent.category.DEFAULT"})
+              ET.SubElement(filt, "data", {ns+"mimeType": "*/*"})
+          tree.write(p, encoding="utf-8", xml_declaration=True)
+          PY
+
+      - name: Build and verify APK
+        working-directory: fresh-book-vault/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug
+          BUILD_TOOLS="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -n1)"
+          "$BUILD_TOOLS/apksigner" verify --verbose app/build/outputs/apk/debug/app-debug.apk
+          "$BUILD_TOOLS/aapt" dump badging app/build/outputs/apk/debug/app-debug.apk | head -n 3
+
+      - name: Upload Book Vault APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: book-vault-apk
+          path: fresh-book-vault/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
