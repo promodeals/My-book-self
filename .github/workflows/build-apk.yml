@@ -98,7 +98,10 @@ jobs:
                   try:
                       with Image.open(p) as old:
                           size = old.size
-                      ImageOps.fit(src, size, method=Image.Resampling.LANCZOS).save(p, format="PNG", optimize=True)
+                      fitted = ImageOps.contain(src, size, method=Image.Resampling.LANCZOS)
+                      splash = Image.new("RGB", size, (22, 8, 23))
+                      splash.paste(fitted, ((size[0] - fitted.width) // 2, (size[1] - fitted.height) // 2))
+                      splash.save(p, format="PNG", optimize=True)
                   except Exception as e:
                       print("Skipping splash asset", p, e)
           PY
