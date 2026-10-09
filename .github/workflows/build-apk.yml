@@ -32,6 +32,7 @@ jobs:
         run: |
           mkdir -p www
           cp index.html manifest.json service-worker.js icon-192.png icon-512.png www/
+          mkdir -p www/pdfjs
           cat > package.json <<'EOF'
           {
             "name": "my-bookshelf-android",
@@ -40,7 +41,8 @@ jobs:
             "description": "Android wrapper for My Bookshelf",
             "dependencies": {
               "@capacitor/android": "^7.4.3",
-              "@capacitor/core": "^7.4.3"
+              "@capacitor/core": "^7.4.3",
+              "pdfjs-dist": "3.11.174"
             },
             "devDependencies": {
               "@capacitor/cli": "^7.4.3"
@@ -48,6 +50,7 @@ jobs:
           }
           EOF
           npm install
+          cp node_modules/pdfjs-dist/build/pdf.min.js node_modules/pdfjs-dist/build/pdf.worker.min.js www/pdfjs/
           cat > capacitor.config.json <<'EOF'
           {
             "appId": "com.promodeals.mybookshelf.installfix",
