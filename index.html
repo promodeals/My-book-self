@@ -130,7 +130,9 @@ window.addEventListener('mybookshelf-share',importSharedFiles);
 $('cancelAdd').onclick=()=>{$('categoryDialog').close();$('fileInput').value='';pendingFiles=[]};
 $('categoryForm').onsubmit=async e=>{e.preventDefault();const category=$('category').value;for(const f of pendingFiles){await new Promise((resolve,reject)=>{const r=store('readwrite').add({name:f.name,type:f.type,size:f.size,added:Date.now(),category,blob:f});r.onsuccess=resolve;r.onerror=()=>reject(r.error)})}$('categoryDialog').close();$('fileInput').value='';pendingFiles=[];refresh()};
 $('search').addEventListener('input',render);$('search').addEventListener('search',render);$('search').addEventListener('keyup',render);$('filter').addEventListener('change',render);
-function hideSplash(){const splash=$('splash');if(splash)splash.classList.add('done')}\nsetTimeout(hideSplash,4500);\nopenDB().then(async d=>{db=d;await refresh();await importSharedFiles();hideSplash()}).catch(e=>{console.error(e);$('library').innerHTML='<div class="empty"><strong>Storage could not be opened.</strong><p>Please try again in Chrome.</p></div>';hideSplash()});
+function hideSplash(){const splash=$('splash');if(splash)splash.classList.add('done')}
+setTimeout(hideSplash,4500);
+openDB().then(async d=>{db=d;await refresh();await importSharedFiles();hideSplash()}).catch(e=>{console.error(e);$('library').innerHTML='<div class="empty"><strong>Storage could not be opened.</strong><p>Please try again in Chrome.</p></div>';hideSplash()});
 if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').catch(console.error))}
 </script>
 </body>
