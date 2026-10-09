@@ -3,30 +3,30 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#24324a">
+<meta name="theme-color" content="#a13d83">
 <meta name="description" content="Your personal offline bookshelf for PDFs, notes, and other study files.">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <script src="./pdfjs/pdf.min.js" onerror="this.onerror=null;this.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js'"></script>
 <title>My Bookshelf</title>
 <style>
-:root{--bg:#f4f6fb;--panel:#fff;--ink:#182235;--muted:#667085;--accent:#31496b;--line:#e3e8f1;--soft:#edf2fa;--danger:#b42318}
+:root{--bg:#fff4fb;--panel:#fff;--ink:#302039;--muted:#796b82;--accent:#a13d83;--line:#f0d7e9;--soft:#fbe5f4;--danger:#b42318}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
-header{background:linear-gradient(135deg,#24324a,#405c83);color:white;padding:22px 18px 26px;border-radius:0 0 24px 24px}
+header{background:linear-gradient(135deg,#702b78,#b44791 58%,#e38dbb);color:white;padding:22px 18px 26px;border-radius:0 0 24px 24px;box-shadow:0 8px 28px #a13d8326}
 .head{max-width:900px;margin:auto}header .eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.8}h1{font-size:28px;margin:5px 0}header p{margin:4px 0 0;opacity:.86}
 main{max-width:900px;margin:0 auto;padding:18px 14px 40px}.toolbar{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:14px}
 input,select,button{font:inherit}input[type=search],select{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:12px;padding:12px;min-width:0}
-#search{flex:1;min-width:170px}.btn{border:0;border-radius:12px;padding:12px 15px;background:var(--accent);color:#fff;font-weight:650;cursor:pointer}.btn.secondary{background:#e4eaf3;color:#24324a}.btn:active{transform:scale(.98)}
+#search{flex:1;min-width:170px}.btn{border:0;border-radius:12px;padding:12px 15px;background:var(--accent);color:#fff;font-weight:650;cursor:pointer}.btn.secondary{background:#f7dff0;color:#702b78}.btn:active{transform:scale(.98)}
 .stats{display:flex;gap:10px;margin:12px 0 18px}.stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;flex:1}.stat strong{display:block;font-size:21px}.stat span{font-size:12px;color:var(--muted)}
 .section-title{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:16px 2px 10px}.section-title h2{font-size:17px;margin:0}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
 .file{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;min-width:0;box-shadow:0 2px 8px #18223508}
 .filetop{display:flex;gap:11px;align-items:center}.fileicon{width:45px;height:50px;flex:none;display:grid;place-items:center;background:var(--soft);border-radius:10px;font-size:22px}.filename{font-weight:700;overflow-wrap:anywhere;line-height:1.25}.meta{font-size:12px;color:var(--muted);margin-top:5px}
-.tag{display:inline-block;background:#edf2fa;color:#40516d;padding:4px 8px;border-radius:99px;font-size:11px;margin-top:10px}
+.tag{display:inline-block;background:#fbe5f4;color:#702b78;padding:4px 8px;border-radius:99px;font-size:11px;margin-top:10px}
 .actions{display:flex;gap:7px;margin-top:13px}.actions button,.actions a{flex:1;text-align:center;text-decoration:none;border:1px solid var(--line);border-radius:9px;background:white;color:var(--ink);padding:8px 5px;font-size:13px;cursor:pointer}.actions .delete{color:var(--danger)}
 .empty{background:var(--panel);border:1px dashed #c5cfdd;border-radius:16px;padding:32px 18px;text-align:center;color:var(--muted)}.empty .big{font-size:36px;margin-bottom:8px}
 .hint{font-size:12px;color:var(--muted);margin:16px 3px;line-height:1.5}
-#pdfViewer{position:fixed;inset:0;z-index:1000;background:#f4f6fb;display:none;flex-direction:column}#pdfViewer.active{display:flex}.pdfbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px;background:#24324a;color:#fff}.pdfbar strong{flex:1;min-width:120px;overflow-wrap:anywhere}.pdfbar button{border:0;border-radius:8px;padding:9px 12px;background:#fff;color:#182235;font-weight:650}.pdfstage{flex:1;overflow:auto;text-align:center;padding:12px}.pdfstage canvas{max-width:100%;height:auto;box-shadow:0 2px 12px #0002;background:white}.pdfstatus{font-size:13px;color:var(--muted);padding:6px}
+#pdfViewer{position:fixed;inset:0;z-index:1000;background:#f4f6fb;display:none;flex-direction:column}#pdfViewer.active{display:flex}.pdfbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px;background:linear-gradient(110deg,#702b78,#a13d83);color:#fff}.pdfbar strong{flex:1;min-width:120px;overflow-wrap:anywhere}.pdfbar button{border:0;border-radius:8px;padding:9px 12px;background:#fff;color:#182235;font-weight:650}.pdfstage{flex:1;overflow:auto;text-align:center;padding:12px}.pdfstage canvas{max-width:100%;height:auto;box-shadow:0 2px 12px #0002;background:white}.pdfstatus{font-size:13px;color:var(--muted);padding:6px}
 dialog{width:min(460px,calc(100% - 28px));border:0;border-radius:18px;padding:20px;box-shadow:0 20px 80px #0003}dialog::backdrop{background:#10182888}dialog h2{margin:0 0 14px}dialog label{display:block;font-size:13px;color:var(--muted);margin:12px 0 5px}dialog input,dialog select{width:100%}.dialog-actions{display:flex;gap:9px;margin-top:18px}.dialog-actions button{flex:1}
 footer{text-align:center;color:var(--muted);font-size:12px;padding:8px 16px 24px}
 @media(max-width:480px){header{padding-top:19px}h1{font-size:25px}.toolbar>*{width:100%}.stats{gap:7px}.stat{padding:10px}.stat strong{font-size:19px}}
@@ -79,7 +79,7 @@ async function openFile(id){
  if((f.type||'').includes('pdf')||f.name.toLowerCase().endsWith('.pdf')){
   if(!window.pdfjsLib){alert('The PDF reader is not available. Please update the Books app and try again.');return}
   $('pdfViewer').classList.add('active');$('pdfTitle').textContent=f.name;$('pdfStatus').textContent='Loading PDF…';$('pdfCanvas').style.display='none';
-  try{pdfjsLib.GlobalWorkerOptions.workerSrc='./pdfjs/pdf.worker.min.js';activePdf=await pdfjsLib.getDocument({data:await f.blob.arrayBuffer()}).promise;pdfPage=1;pdfScale=1;await renderPdfPage()}
+  try{pdfjsLib.GlobalWorkerOptions.workerSrc=location.protocol==='file:'?'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js':'./pdfjs/pdf.worker.min.js';activePdf=await pdfjsLib.getDocument({data:await f.blob.arrayBuffer()}).promise;pdfPage=1;pdfScale=1;await renderPdfPage()}
   catch(e){console.error('PDF open failed',e);$('pdfStatus').textContent='This PDF could not be opened. It may be damaged or password-protected.';$('pdfCanvas').style.display='none'}
   return;
  }
@@ -87,8 +87,25 @@ async function openFile(id){
 }
 async function renderPdfPage(){
  if(!activePdf)return;
- try{if(pdfRenderTask){pdfRenderTask.cancel();pdfRenderTask=null}const page=await activePdf.getPage(pdfPage),viewport=page.getViewport({scale:pdfScale});const canvas=$('pdfCanvas'),ctx=canvas.getContext('2d');canvas.width=viewport.width;canvas.height=viewport.height;canvas.style.display='inline-block';$('pdfStatus').textContent='';$('pdfPage').textContent=pdfPage+' / '+activePdf.numPages;pdfRenderTask=page.render({canvasContext:ctx,viewport});await pdfRenderTask.promise;pdfRenderTask=null}
- catch(e){if(e?.name!=='RenderingCancelledException'){console.error(e);$('pdfStatus').textContent='Could not render this PDF page.'}}
+ const renderPdf=activePdf;
+ try{
+  if(pdfRenderTask){try{pdfRenderTask.cancel()}catch(_){};try{await pdfRenderTask.promise}catch(_){};pdfRenderTask=null}
+  if(renderPdf!==activePdf)return;
+  const page=await renderPdf.getPage(pdfPage);
+  if(renderPdf!==activePdf){page.cleanup();return}
+  const canvas=$('pdfCanvas'),cssViewport=page.getViewport({scale:pdfScale});
+  const maxPixels=Math.min(4000000,Math.max(1000000,(window.innerWidth||900)*(window.innerHeight||700)*2));
+  const pixelRatio=Math.min(window.devicePixelRatio||1,Math.sqrt(maxPixels/(cssViewport.width*cssViewport.height))||1);
+  const viewport=page.getViewport({scale:pdfScale*pixelRatio}),ctx=canvas.getContext('2d',{alpha:false});
+  if(!ctx)throw new Error('Canvas 2D context unavailable');
+  canvas.width=Math.max(1,Math.floor(viewport.width));canvas.height=Math.max(1,Math.floor(viewport.height));
+  canvas.style.width=Math.floor(cssViewport.width)+'px';canvas.style.height=Math.floor(cssViewport.height)+'px';
+  canvas.style.display='inline-block';$('pdfStatus').textContent='Rendering page…';$('pdfPage').textContent=pdfPage+' / '+renderPdf.numPages;
+  pdfRenderTask=page.render({canvasContext:ctx,viewport,background:'rgb(255,255,255)'});
+  await pdfRenderTask.promise;
+  if(renderPdf===activePdf)$('pdfStatus').textContent='';
+  pdfRenderTask=null;page.cleanup();
+ }catch(e){if(e?.name!=='RenderingCancelledException'){console.error('PDF page render failed',e);$('pdfStatus').textContent='Could not render this page. Try zooming out or reopening the book.'}}
 }
 $('pdfPrev').onclick=()=>{if(activePdf&&pdfPage>1){pdfPage--;renderPdfPage()}};
 $('pdfNext').onclick=()=>{if(activePdf&&pdfPage<activePdf.numPages){pdfPage++;renderPdfPage()}};
