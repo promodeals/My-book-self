@@ -24,5 +24,24 @@ public class MainActivity extends Activity {
   private String makePayload(String name,String mime,byte[] bytes)throws Exception { JSONObject o=new JSONObject();o.put("name",name);o.put("type",mime==null?"application/octet-stream":mime);o.put("base64",Base64.encodeToString(bytes,Base64.NO_WRAP));return o.toString(); }
   private void deliverPending(){ if(web==null||pendingPayload==null)return; final String payload=pendingPayload; pendingPayload=null; web.postDelayed(()->web.evaluateJavascript("(function(){if(window.receiveNativeSharedFile){window.receiveNativeSharedFile("+JSONObject.quote(payload)+");}})()",null),500); }
   @JavascriptInterface public void closeApp(){runOnUiThread(this::finish);}
-  @Override public void onBackPressed(){if(web!=null&&web.canGoBack())web.goBack();else super.onBackPressed();}
+  @Override public void onBackPressed() {
+    if (web == null) {
+      super.onBackPressed();
+      return;
+    }
+    // Let the PDF reader consume Android Back first, closing the reader overlay
+    // and returning to the bookshelf instead of navigating away from the app.
+    web.evaluateJavascript(
+      "(function(){return window.handleNativeBack && window.handleNativeBack() ? 'handled' : 'not-handled';})()",
+      result -> {
+        if (!"\"handled\"".equals(result)) {
+          if (web != null && web.canGoBack()) {
+            web.goBack();
+          } else {
+            MainActivity.super.onBackPressed();
+          }
+        }
+      }
+    );
+  }
 }
