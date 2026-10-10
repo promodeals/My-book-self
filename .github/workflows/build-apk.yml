@@ -64,7 +64,7 @@ jobs:
           cp node_modules/pdfjs-dist/build/pdf.min.js node_modules/pdfjs-dist/build/pdf.worker.min.js www/pdfjs/
           cat > capacitor.config.json <<'EOF'
           {
-            "appId": "com.promodeals.mybookshelf",
+            "appId": "com.promodeals.mybookshelf.updated",
             "appName": "My Bookshelf",
             "webDir": "www",
             "bundledWebRuntime": false,
@@ -77,7 +77,7 @@ jobs:
           npx cap sync android
           mkdir -p android/app/src/main/java/com/promodeals/mybookshelf
           cp android-custom/FileSharePlugin.java android-custom/MainActivity.java android/app/src/main/java/com/promodeals/mybookshelf/
-          sed -i 's/^package com\.promodeals\.mybookshelf;/package com.promodeals.mybookshelf;/' android/app/src/main/java/com/promodeals/mybookshelf/FileSharePlugin.java android/app/src/main/java/com/promodeals/mybookshelf/MainActivity.java
+          sed -i 's/^package com\.promodeals\.mybookshelf;/package com.promodeals.mybookshelf.updated;/' android/app/src/main/java/com/promodeals/mybookshelf/FileSharePlugin.java android/app/src/main/java/com/promodeals/mybookshelf/MainActivity.java
           python3 - <<'PY'
           import xml.etree.ElementTree as ET
           path = "android/app/src/main/AndroidManifest.xml"
@@ -119,6 +119,6 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: my-bookshelf-installfix-apk
+          name: my-bookshelf-final-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
