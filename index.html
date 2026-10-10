@@ -39,7 +39,7 @@ input,select,button{font:inherit}input[type=search],select{border:1px solid var(
     <select id="filter" aria-label="Filter by category"><option value="">All categories</option><option>Books</option><option>Notes</option><option>Question Papers</option><option>Other</option></select>
     <button class="btn" id="addBtn">＋ Add files</button><button class="btn secondary" id="browseBtn" type="button">📂 Import from device / Google Files</button>
   </div>
-  <input id="fileInput" type="file" accept="*/*" multiple hidden>
+  <input id="fileInput" type="file" accept="*/*" multiple style="position:fixed;left:-10000px;top:0;width:1px;height:1px;opacity:0;">
   <div class="stats"><div class="stat"><strong id="count">0</strong><span>Saved files</span></div><div class="stat"><strong id="size">0 B</strong><span>Storage used</span></div></div>
   <div class="section-title"><h2>Your library</h2><span id="resultLabel" class="meta">0 items</span></div>
   <div id="library" class="grid"></div>
