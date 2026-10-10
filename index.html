@@ -6,13 +6,13 @@
 <meta name="theme-color" content="#a13d83">
 <meta name="description" content="Your personal offline bookshelf for PDFs, notes, and other study files.">
 <link rel="manifest" href="manifest.json">
-<link rel="icon" type="image/png" href="file_000000001de48208b34c3688a68867bb.png">
+<link rel="icon" type="image/svg+xml" href="app-icon.svg">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <script src="./pdfjs/pdf.min.js" onerror="this.onerror=null;this.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js'"></script>
 <title>My Bookshelf</title>
 <style>
 :root{--bg:#fff4fb;--panel:#fff;--ink:#302039;--muted:#796b82;--accent:#a13d83;--line:#f0d7e9;--soft:#fbe5f4;--danger:#b42318}
-*{box-sizing:border-box}body{margin:0;background:var(--bg) url("./Screenshot_20261010-191020_1.png") center top/cover fixed no-repeat;color:var(--ink);font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+*{box-sizing:border-box}body{margin:0;background:var(--bg) url("./Screenshot_20261010-191020_1.png") center top/cover no-repeat;color:var(--ink);font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
 header{background:linear-gradient(135deg,#702b78,#b44791 58%,#e38dbb);color:white;padding:22px 18px 26px;border-radius:0 0 24px 24px;box-shadow:0 8px 28px #a13d8326}
 .head{max-width:900px;margin:auto}header .eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.8}h1{font-size:28px;margin:5px 0}header p{margin:4px 0 0;opacity:.86}
 main{max-width:900px;margin:0 auto;padding:18px 14px 40px}.toolbar{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:14px}
@@ -189,7 +189,7 @@ $('cancelAdd').onclick=()=>{$('categoryDialog').close();$('fileInput').value='';
 $('categoryForm').onsubmit=async e=>{e.preventDefault();const category=$('category').value;const files=[...pendingFiles];if(!files.length){$('categoryDialog').close();return}try{for(const f of files){await new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readwrite');const r=tx.objectStore(STORE).add({name:f.name||'Untitled file',type:f.type||'application/octet-stream',size:f.size||0,added:Date.now(),category,blob:f});r.onsuccess=resolve;r.onerror=()=>reject(r.error||new Error('Could not save '+f.name));tx.onabort=()=>reject(tx.error||new Error('Storage transaction failed'))})}pendingFiles=[];$('fileInput').value='';$('categoryDialog').close();await refresh();alert(files.length===1?'File saved to your library.':files.length+' files saved to your library.')}catch(err){console.error('Saving selected files failed',err);alert('Could not save the file. Your phone may be low on storage, or the file may be too large. Please try a smaller file.')}};
 $('search').addEventListener('input',render);$('search').addEventListener('search',render);$('search').addEventListener('keyup',render);$('filter').addEventListener('change',render);
 function hideSplash(){const s=$('splash');if(s){s.classList.add('hide');setTimeout(()=>s.remove(),280)}}
-async function finishStartup(){await new Promise(r=>setTimeout(r,2500));hideSplash()}
+async function finishStartup(){await new Promise(r=>setTimeout(r,500));hideSplash()}
 openDB().then(async d=>{db=d;await refresh();await importSharedFiles();await finishStartup()}).catch(e=>{console.error(e);$('library').innerHTML='<div class="empty"><strong>Storage could not be opened.</strong><p>Please try again in Chrome.</p></div>';finishStartup()});
 if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').catch(console.error))}
 </script>
