@@ -1,4 +1,4 @@
-const CACHE_NAME = "my-bookshelf-v25";
+const CACHE_NAME = "my-bookshelf-v26";
 const APP_SHELL = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png", "./bookshelf-background.jpg", "./app-icon.svg", "./splash-art.svg", "./file_000000001de48208b34c3688a68867bb.png", "./maxresdefault-4-1024x576.jpg.webp", "./Screenshot_20261010-191020_1.png"];
 
 function saveSharedFile(file) {
