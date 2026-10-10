@@ -75,9 +75,9 @@ jobs:
           EOF
           npx cap add android
           npx cap sync android
-          mkdir -p android/app/src/main/java/com/promodeals/mybookshelf
-          cp android-custom/FileSharePlugin.java android-custom/MainActivity.java android/app/src/main/java/com/promodeals/mybookshelf/
-          sed -i 's/^package com\.promodeals\.mybookshelf;/package com.promodeals.mybookshelf.updated;/' android/app/src/main/java/com/promodeals/mybookshelf/FileSharePlugin.java android/app/src/main/java/com/promodeals/mybookshelf/MainActivity.java
+          mkdir -p android/app/src/main/java/com/promodeals/mybookshelf/updated
+          cp android-custom/FileSharePlugin.java android-custom/MainActivity.java android/app/src/main/java/com/promodeals/mybookshelf/updated/
+          sed -i 's/^package com\.promodeals\.mybookshelf;/package com.promodeals.mybookshelf.updated;/' android/app/src/main/java/com/promodeals/mybookshelf/updated/FileSharePlugin.java android/app/src/main/java/com/promodeals/mybookshelf/updated/MainActivity.java
           python3 - <<'PY'
           import xml.etree.ElementTree as ET
           path = "android/app/src/main/AndroidManifest.xml"
