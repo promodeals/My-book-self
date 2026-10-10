@@ -79,6 +79,32 @@ jobs:
           EOF
           npx cap add android
           npx cap sync android
+          # Install the custom SVG as the Android launcher icon in every density.
+          python3 - <<'PY'
+          import cairosvg
+          from PIL import Image
+          import io, os, xml.etree.ElementTree as ET
+          raw = cairosvg.svg2png(url="app-icon.svg", output_width=512, output_height=512)
+          source = Image.open(io.BytesIO(raw)).convert("RGBA")
+          sizes = {"mdpi":48, "hdpi":72, "xhdpi":96, "xxhdpi":144, "xxxhdpi":192}
+          for density, size in sizes.items():
+              folder = f"android/app/src/main/res/mipmap-{density}"
+              os.makedirs(folder, exist_ok=True)
+              image = source.resize((size, size), Image.Resampling.LANCZOS)
+              image.save(os.path.join(folder, "ic_launcher.png"), optimize=True)
+              image.save(os.path.join(folder, "ic_launcher_round.png"), optimize=True)
+          manifest = "android/app/src/main/AndroidManifest.xml"
+          ET.register_namespace("android", "http://schemas.android.com/apk/res/android")
+          ns = "{http://schemas.android.com/apk/res/android}"
+          tree = ET.parse(manifest)
+          app = tree.getroot().find("application")
+          if app is None:
+              raise SystemExit("Android application element not found")
+          app.set(ns + "icon", "@mipmap/ic_launcher")
+          app.set(ns + "roundIcon", "@mipmap/ic_launcher_round")
+          tree.write(manifest, encoding="utf-8", xml_declaration=True)
+          print("Installed custom My Bookshelf launcher icons.")
+          PY
           mkdir -p android/app/src/main/java/com/promodeals/mybookshelf/updated
           cp android-custom/FileSharePlugin.java android-custom/MainActivity.java android/app/src/main/java/com/promodeals/mybookshelf/updated/
           sed -i 's/^package com\.promodeals\.mybookshelf;/package com.promodeals.mybookshelf.updated;/' android/app/src/main/java/com/promodeals/mybookshelf/updated/FileSharePlugin.java android/app/src/main/java/com/promodeals/mybookshelf/updated/MainActivity.java
