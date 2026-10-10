@@ -1,5 +1,5 @@
-const CACHE_NAME = "my-bookshelf-v23";
-const APP_SHELL = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png", "./bookshelf-background.jpg"];
+const CACHE_NAME = "my-bookshelf-v24";
+const APP_SHELL = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png", "./bookshelf-background.jpg", "./app-icon.svg", "./splash-art.svg"];
 
 function saveSharedFile(file) {
   return new Promise((resolve, reject) => {
