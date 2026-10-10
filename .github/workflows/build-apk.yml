@@ -64,7 +64,7 @@ jobs:
           cp node_modules/pdfjs-dist/build/pdf.min.js node_modules/pdfjs-dist/build/pdf.worker.min.js www/pdfjs/
           cat > capacitor.config.json <<'EOF'
           {
-            "appId": "com.promodeals.mybookshelf.installfix",
+            "appId": "com.promodeals.mybookshelf",
             "appName": "My Bookshelf",
             "webDir": "www",
             "bundledWebRuntime": false,
@@ -75,36 +75,6 @@ jobs:
           EOF
           npx cap add android
           npx cap sync android
-          python3 - <<'PY'
-          from PIL import Image, ImageOps
-          from pathlib import Path
-          src = Image.open("bookshelf-background.jpg").convert("RGB")
-          side = min(src.size)
-          left, top = (src.width - side) // 2, (src.height - side) // 2
-          art = src.crop((left, top, left + side, top + side))
-          res = Path("android/app/src/main/res")
-          for folder in res.glob("mipmap-*"):
-              for p in folder.glob("ic_launcher*.png"):
-                  try:
-                      with Image.open(p) as old:
-                          size = old.size
-                      art.resize(size, Image.Resampling.LANCZOS).save(p, format="PNG", optimize=True)
-                  except Exception as e:
-                      print("Skipping icon", p, e)
-          # Use the supplied artwork in Android's native launch screen too.
-          splash_files = list(res.glob("drawable*/splash.png")) + [res / "drawable" / "splash.png"]
-          for p in splash_files:
-              if p.exists():
-                  try:
-                      with Image.open(p) as old:
-                          size = old.size
-                      fitted = ImageOps.contain(src, size, method=Image.Resampling.LANCZOS)
-                      splash = Image.new("RGB", size, (22, 8, 23))
-                      splash.paste(fitted, ((size[0] - fitted.width) // 2, (size[1] - fitted.height) // 2))
-                      splash.save(p, format="PNG", optimize=True)
-                  except Exception as e:
-                      print("Skipping splash asset", p, e)
-          PY
           mkdir -p android/app/src/main/java/com/promodeals/mybookshelf/installfix2
           cp android-custom/FileSharePlugin.java android-custom/MainActivity.java android/app/src/main/java/com/promodeals/mybookshelf/installfix2/
           sed -i 's/^package com\.promodeals\.mybookshelf;/package com.promodeals.mybookshelf.installfix2;/' android/app/src/main/java/com/promodeals/mybookshelf/installfix2/FileSharePlugin.java android/app/src/main/java/com/promodeals/mybookshelf/installfix2/MainActivity.java
