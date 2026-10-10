@@ -25,7 +25,7 @@ public class MainActivity extends BridgeActivity {
                 getBridge().getWebView().evaluateJavascript(
                     "(window.handleNativeBack && window.handleNativeBack()) ? 'handled' : 'not-handled'",
                     value -> {
-                        if (!"\\\"handled\\\"".equals(value) && !"handled".equals(value)) {
+                        if (value == null || !value.contains("handled") || value.contains("not-handled")) {
                             finish();
                         }
                     }
