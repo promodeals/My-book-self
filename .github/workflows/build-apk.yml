@@ -8,6 +8,8 @@ on:
       - 'manifest.json'
       - 'service-worker.js'
       - 'bookshelf-background.jpg'
+      - 'app-icon.svg'
+      - 'splash.jpg'
       - 'android-custom/**'
       - '.github/workflows/build-apk.yml'
 
@@ -32,17 +34,19 @@ jobs:
       - name: Prepare Capacitor Android app
         run: |
           mkdir -p www
-          python3 -m pip install --quiet pillow
+          python3 -m pip install --quiet pillow cairosvg
           python3 - <<'PY'
+          import cairosvg
           from PIL import Image
-          src = Image.open("bookshelf-background.jpg").convert("RGB")
-          side = min(src.size)
-          left, top = (src.width - side) // 2, (src.height - side) // 2
-          art = src.crop((left, top, left + side, top + side))
+          import io
+          raw = cairosvg.svg2png(url="app-icon.svg", output_width=512, output_height=512)
+          src = Image.open(io.BytesIO(raw)).convert("RGBA")
           for size in (192, 512):
-              art.resize((size, size), Image.Resampling.LANCZOS).save("icon-" + str(size) + ".png", optimize=True)
+              src.resize((size, size), Image.Resampling.LANCZOS).save("icon-" + str(size) + ".png", optimize=True)
           PY
           cp index.html manifest.json service-worker.js icon-192.png icon-512.png bookshelf-background.jpg www/
+          cp app-icon.svg www/
+          if [ -f splash.jpg ]; then cp splash.jpg www/; fi
           mkdir -p www/pdfjs
           cat > package.json <<'EOF'
           {
