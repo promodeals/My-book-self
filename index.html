@@ -127,7 +127,7 @@ async function renderPdfPage(preserveZoomPosition=null){
   const pixelRatio=Math.max(0.5,Math.min(Math.max(window.devicePixelRatio||1,2),Math.sqrt(maxPixels/(cssViewport.width*cssViewport.height))||1));
   const viewport=page.getViewport({scale:pdfScale*fitScale*pixelRatio});
   canvas.width=Math.max(1,Math.floor(viewport.width));canvas.height=Math.max(1,Math.floor(viewport.height));
-  canvas.style.width=Math.floor(cssViewport.width)+'px';canvas.style.height=Math.floor(cssViewport.height)+'px';$('bottomPage').textContent=pdfPage+' / '+renderPdf.numPages;$('pageScrubber').max=renderPdf.numPages;$('pageScrubber').value=pdfPage;$('readerZoomLabel').textContent=pdfScale===1?'Fit page':Math.round(pdfScale*100)+'%';
+  canvas.style.width=Math.floor(cssViewport.width)+'px';canvas.style.height=Math.floor(cssViewport.height)+'px';$('bottomPage').textContent=pdfPage+' / '+renderPdf.numPages;$('pageScrubber').max=renderPdf.numPages;$('pageScrubber').value=pdfPage;$('readerZoomLabel').textContent=pdfScale===1?'Fit width':Math.round(pdfScale*100)+'%';
   const ctx=canvas.getContext('2d');
   if(!ctx)throw new Error('Canvas 2D context unavailable');
   ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
@@ -146,12 +146,21 @@ async function renderPdfPage(preserveZoomPosition=null){
  }
 }
 $('pageScrubber').addEventListener('input',()=>{if(!activePdf)return;pdfPage=Number($('pageScrubber').value);renderPdfPage();showPdfControls()});
-$('pdfZoomIn').onclick=()=>{showPdfControls();if(activePdf){pdfScale=Math.min(3,pdfScale+0.2);renderPdfPage()}};
-$('pdfZoomOut').onclick=()=>{showPdfControls();if(activePdf){pdfScale=Math.max(0.5,pdfScale-0.2);renderPdfPage()}};
+function zoomPdfBy(delta){
+ if(!activePdf)return;
+ const stage=$('pdfStage'),canvas=$('pdfCanvas'),rect=canvas.getBoundingClientRect(),sr=stage.getBoundingClientRect();
+ const x=Math.min(Math.max(sr.left+sr.width/2,rect.left),rect.right),y=Math.min(Math.max(sr.top+sr.height/2,rect.top),rect.bottom);
+ const oldScale=pdfScale,nextScale=Math.max(.5,Math.min(4,oldScale+delta));
+ if(nextScale===oldScale)return;
+ const position={localX:x-rect.left,localY:y-rect.top,ratio:nextScale/oldScale,stageX:x-sr.left,stageY:y-sr.top};
+ pdfScale=nextScale;renderPdfPage(position);
+}
+$('pdfZoomIn').onclick=()=>{showPdfControls();zoomPdfBy(.2)};
+$('pdfZoomOut').onclick=()=>{showPdfControls();zoomPdfBy(-.2)};
 $('pdfClose').onclick=closeReader;
 function closeReader(){if(!$('pdfViewer').classList.contains('active')||readerClosing)return;readerClosing=true;clearTimeout(pdfControlsTimer);$('pdfViewer').classList.remove('active','controls-hidden');$('readerMenu').hidden=true;closePdfDocument();$('pdfStatus').textContent='';$('pdfCanvas').style.transform='none';$('pdfStage').scrollTo(0,0);history.replaceState({...(history.state||{}),readerOpen:false},'','#library');readerClosing=false}
 $('readerMore').onclick=()=>{showPdfControls();$('readerMenu').hidden=!$('readerMenu').hidden};
-document.querySelectorAll('[data-reader-action]').forEach(b=>b.addEventListener('click',()=>{const action=b.dataset.readerAction;$('readerMenu').hidden=true;if(action==='fit'){pdfScale=1;$('pdfStage').scrollTo(0,0);renderPdfPage()}else if(action==='width'){pdfScale=1.2;$('pdfStage').scrollTo(0,0);renderPdfPage()}else if(action==='first'){pdfPage=1;$('pdfStage').scrollTo(0,0);renderPdfPage()}showPdfControls()}));
+document.querySelectorAll('[data-reader-action]').forEach(b=>b.addEventListener('click',()=>{const action=b.dataset.readerAction;$('readerMenu').hidden=true;if(action==='fit'){pdfScale=1;$('pdfStage').scrollTo(0,0);renderPdfPage()}else if(action==='width'){pdfScale=1;$('pdfStage').scrollTo(0,0);renderPdfPage()}else if(action==='first'){pdfPage=1;$('pdfStage').scrollTo(0,0);renderPdfPage()}showPdfControls()}));
 document.addEventListener('pointerdown',e=>{if(!e.target.closest('#readerMore')&&!e.target.closest('#readerMenu'))$('readerMenu').hidden=true});
 window.handleNativeBack=function(){if($('pdfViewer').classList.contains('active')){closeReader();return true}return false};
 // Keep the reader's native Back action deterministic: close the PDF overlay and return to the library view.
