@@ -85,6 +85,51 @@ jobs:
           EOF
           npx cap add android
           npx cap sync android
+          # Remove only the Android 12+ launch-screen icon; keep the home-screen app icon unchanged.
+          python3 - <<'PY'
+          import os, xml.etree.ElementTree as ET
+          res = "android/app/src/main/res"
+          ET.register_namespace("android", "http://schemas.android.com/apk/res/android")
+          ns = "{http://schemas.android.com/apk/res/android}"
+          manifest_path = "android/app/src/main/AndroidManifest.xml"
+          manifest = ET.parse(manifest_path)
+          app = manifest.getroot().find("application")
+          activity = next((a for a in app.findall("activity") if a.get(ns+"name", "").endswith("MainActivity")), None)
+          if activity is None:
+              raise SystemExit("MainActivity not found")
+          theme_ref = activity.get(ns+"theme") or app.get(ns+"theme")
+          if not theme_ref or not theme_ref.startswith("@style/"):
+              raise SystemExit("Could not identify Android app theme")
+          theme_name = theme_ref.split("/", 1)[1]
+          values_dir = os.path.join(res, "values-v31")
+          os.makedirs(values_dir, exist_ok=True)
+          styles_path = os.path.join(values_dir, "styles.xml")
+          if os.path.exists(styles_path):
+              styles = ET.parse(styles_path)
+              root = styles.getroot()
+          else:
+              root = ET.Element("resources")
+              styles = ET.ElementTree(root)
+          style = next((s for s in root.findall("style") if s.get("name") == theme_name), None)
+          if style is None:
+              style = ET.SubElement(root, "style", {"name": theme_name})
+          for name, value in (
+              ("android:windowSplashScreenAnimatedIcon", "@drawable/splash_transparent"),
+              ("android:windowSplashScreenBackground", "#1C1916"),
+              ("android:windowSplashScreenAnimationDuration", "0"),
+          ):
+              item = next((i for i in style.findall("item") if i.get("name") == name), None)
+              if item is None:
+                  item = ET.SubElement(style, "item", {"name": name})
+              item.text = value
+          ET.indent(styles, space="    ")
+          styles.write(styles_path, encoding="utf-8", xml_declaration=True)
+          drawable_dir = os.path.join(res, "drawable")
+          os.makedirs(drawable_dir, exist_ok=True)
+          with open(os.path.join(drawable_dir, "splash_transparent.xml"), "w") as out:
+              out.write('<?xml version="1.0" encoding="utf-8"?>\\n<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle"><solid android:color="#001C1916"/></shape>\\n')
+          print("Disabled the launch-screen logo only; launcher icon remains unchanged.")
+          PY
           # Use the uploaded silver-haired anime PNG for Android launcher icons in every density.
           python3 - <<'PY'
           import cairosvg
