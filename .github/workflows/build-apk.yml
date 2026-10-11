@@ -11,7 +11,7 @@ on:
       - 'app-icon.svg'
       - 'splash.jpg'
       - 'Screenshot_20261010-191020_1.png'
-      - 'file_000000001de48208b34c3688a68867bb.png'
+      - 'Screenshot_20261010-191020_1.png'
       - 'maxresdefault-4-1024x576.jpg.webp'
       - 'android-custom/**'
       - '.github/workflows/build-apk.yml'
@@ -42,7 +42,7 @@ jobs:
           import cairosvg
           from PIL import Image
           import io
-          src = Image.open("file_000000001de48208b34c3688a68867bb.png").convert("RGBA")
+          src = Image.open("Screenshot_20261010-191020_1.png").convert("RGBA")
           src.thumbnail((512, 512), Image.Resampling.LANCZOS)
           canvas = Image.new("RGBA", (512, 512), (255,255,255,255))
           canvas.alpha_composite(src, ((512-src.width)//2, (512-src.height)//2))
@@ -50,7 +50,7 @@ jobs:
           for size in (192, 512):
               src.resize((size, size), Image.Resampling.LANCZOS).save("icon-" + str(size) + ".png", optimize=True)
           PY
-          cp index.html manifest.json service-worker.js icon-192.png icon-512.png bookshelf-background.jpg Screenshot_20261010-191020_1.png file_000000001de48208b34c3688a68867bb.png maxresdefault-4-1024x576.jpg.webp www/
+          cp index.html manifest.json service-worker.js icon-192.png icon-512.png bookshelf-background.jpg Screenshot_20261010-191020_1.png Screenshot_20261010-191020_1.png maxresdefault-4-1024x576.jpg.webp www/
           cp app-icon.svg www/
           if [ -f splash.jpg ]; then cp splash.jpg www/; fi
           mkdir -p www/pdfjs
@@ -90,7 +90,7 @@ jobs:
           import cairosvg
           from PIL import Image
           import io, os, xml.etree.ElementTree as ET
-          source = Image.open("file_000000001de48208b34c3688a68867bb.png").convert("RGBA")
+          source = Image.open("Screenshot_20261010-191020_1.png").convert("RGBA")
           source.thumbnail((512, 512), Image.Resampling.LANCZOS)
           canvas = Image.new("RGBA", (512, 512), (255,255,255,255))
           canvas.alpha_composite(source, ((512-source.width)//2, (512-source.height)//2))
