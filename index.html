@@ -118,7 +118,8 @@ async function renderPdfPage(preserveZoomPosition=null){
   if(token!==pdfRenderToken||renderPdf!==activePdf){page.cleanup();return}
   const canvas=$('pdfCanvas'),stage=$('pdfStage');
   const baseViewport=page.getViewport({scale:1});
-  const availableWidth=Math.max(160,(stage.clientWidth||window.innerWidth)-12);const fitScale=Math.min(1.5,availableWidth/baseViewport.width);
+  // Default to the widest page that fits the screen; higher zoom levels stay user-controlled.
+  const availableWidth=Math.max(160,(stage.clientWidth||window.innerWidth)-8);const fitScale=availableWidth/baseViewport.width;
   const cssViewport=page.getViewport({scale:pdfScale*fitScale});
   // RGBA canvas avoids Android WebView's unsupported pixel-format error.
   // Limit backing pixels to reduce memory spikes and blank pages on large PDFs.
@@ -157,7 +158,20 @@ window.handleNativeBack=function(){if($('pdfViewer').classList.contains('active'
 window.addEventListener('mybookshelf-back',()=>{if($('pdfViewer').classList.contains('active'))closeReader()});
 window.addEventListener('keydown',e=>{if((e.key==='Escape'||e.key==='Backspace')&&$('pdfViewer').classList.contains('active')){e.preventDefault();closeReader()}});
 window.addEventListener('popstate',()=>{if($('pdfViewer').classList.contains('active'))closeReader()});
-$('pdfStage').addEventListener('click',()=>{if(suppressStageClick){suppressStageClick=false;return}togglePdfControls()});
+let lastPdfTap=0;
+$('pdfStage').addEventListener('click',e=>{
+ if(suppressStageClick){suppressStageClick=false;return}
+ const now=Date.now(),doubleTap=now-lastPdfTap<320;lastPdfTap=now;
+ if(doubleTap&&activePdf){
+  const stage=$('pdfStage'),canvas=$('pdfCanvas'),rect=canvas.getBoundingClientRect(),sr=stage.getBoundingClientRect();
+  const x=e.clientX||window.innerWidth/2,y=e.clientY||window.innerHeight/2;
+  const position={localX:x-rect.left,localY:y-rect.top,ratio:pdfScale<1.15?1.8/pdfScale:1/pdfScale,stageX:x-sr.left,stageY:y-sr.top};
+  pdfScale=pdfScale<1.15?1.8:1;
+  canvas.style.transform='none';
+  renderPdfPage(position);showPdfControls();lastPdfTap=0;return;
+ }
+ togglePdfControls()
+});
 $('pdfStage').addEventListener('scroll',()=>{if($('pdfViewer').classList.contains('active'))showPdfControls()},{passive:true});
 let swipeStart=null; $('pdfStage').addEventListener('touchstart',e=>{if(e.touches.length===1)swipeStart={x:e.touches[0].clientX,y:e.touches[0].clientY,time:Date.now()};else swipeStart=null},{passive:true}); $('pdfStage').addEventListener('touchend',e=>{if(!swipeStart||e.changedTouches.length!==1||pinchState)return;const dx=e.changedTouches[0].clientX-swipeStart.x,dy=e.changedTouches[0].clientY-swipeStart.y,duration=Date.now()-swipeStart.time;swipeStart=null;if(Math.abs(dx)>55&&Math.abs(dx)>Math.abs(dy)*1.15&&duration<900){suppressStageClick=true;turnPage(dx<0?1:-1);setTimeout(()=>{suppressStageClick=false},500)}else if(Math.abs(dx)<12&&Math.abs(dy)<12)showPdfControls()},{passive:true});
 document.querySelector('.pdfbar').addEventListener('pointerdown',showPdfControls,{passive:true});
