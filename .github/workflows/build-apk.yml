@@ -127,7 +127,7 @@ jobs:
           drawable_dir = os.path.join(res, "drawable")
           os.makedirs(drawable_dir, exist_ok=True)
           with open(os.path.join(drawable_dir, "splash_transparent.xml"), "w") as out:
-              out.write('<?xml version="1.0" encoding="utf-8"?>\\n<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle"><solid android:color="#001C1916"/></shape>\\n')
+              out.write('<?xml version="1.0" encoding="utf-8"?>\n<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle"><solid android:color="#001C1916"/></shape>\n')
           print("Disabled the launch-screen logo only; launcher icon remains unchanged.")
           PY
           # Use the uploaded silver-haired anime PNG for Android launcher icons in every density.
