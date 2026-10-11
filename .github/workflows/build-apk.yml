@@ -95,6 +95,31 @@ jobs:
           canvas = Image.new("RGBA", (512, 512), (255,255,255,255))
           canvas.alpha_composite(source, ((512-source.width)//2, (512-source.height)//2))
           source = canvas
+          # Android 8+ prefers adaptive-icon XML over density PNGs. Replace those
+          # adaptive resources too, using the uploaded image as the foreground.
+          adaptive_dir = "android/app/src/main/res/mipmap-anydpi-v26"
+          os.makedirs(adaptive_dir, exist_ok=True)
+          foreground_dir = "android/app/src/main/res/drawable-nodpi"
+          os.makedirs(foreground_dir, exist_ok=True)
+          foreground = Image.new("RGBA", (432, 432), (255,255,255,0))
+          icon = source.resize((320, 320), Image.Resampling.LANCZOS)
+          foreground.alpha_composite(icon, ((432-icon.width)//2, (432-icon.height)//2))
+          foreground.save(os.path.join(foreground_dir, "ic_launcher_foreground.png"), optimize=True)
+          adaptive_xml = """<?xml version="1.0" encoding="utf-8"?>
+          <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+              <background android:drawable="@color/ic_launcher_background"/>
+              <foreground android:drawable="@drawable/ic_launcher_foreground"/>
+          </adaptive-icon>
+          """
+          colors_dir = "android/app/src/main/res/values"
+          os.makedirs(colors_dir, exist_ok=True)
+          with open(os.path.join(colors_dir, "ic_launcher_background.xml"), "w") as out:
+              out.write("""<?xml version="1.0" encoding="utf-8"?>
+          <resources><color name="ic_launcher_background">#FFFFFF</color></resources>
+          """)
+          for name in ("ic_launcher", "ic_launcher_round"):
+              with open(os.path.join(adaptive_dir, name + ".xml"), "w") as out:
+                  out.write(adaptive_xml)
           sizes = {"mdpi":48, "hdpi":72, "xhdpi":96, "xxhdpi":144, "xxxhdpi":192}
           for density, size in sizes.items():
               folder = f"android/app/src/main/res/mipmap-{density}"
