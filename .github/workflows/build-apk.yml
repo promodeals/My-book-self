@@ -138,7 +138,16 @@ jobs:
           from PIL import Image
           import io, os, xml.etree.ElementTree as ET
           source = Image.open("Yamate Screenshot_20261010-191020_1.png").convert("RGBA")
-          source.thumbnail((512, 512), Image.Resampling.LANCZOS)
+          # Trim the large white screenshot margins so the artwork fills the phone icon.
+          rgb = source.convert("RGB")
+          import PIL.ImageChops as ImageChops
+          diff = ImageChops.difference(rgb, Image.new("RGB", rgb.size, (255,255,255)))
+          diff = diff.point(lambda p: 255 if p > 28 else 0)
+          bbox = diff.getbbox()
+          if bbox:
+              source = source.crop(bbox)
+          # Fit the trimmed artwork into a square launcher icon without stretching it.
+          source.thumbnail((440, 440), Image.Resampling.LANCZOS)
           canvas = Image.new("RGBA", (512, 512), (255,255,255,255))
           canvas.alpha_composite(source, ((512-source.width)//2, (512-source.height)//2))
           source = canvas
