@@ -11,7 +11,7 @@ on:
       - 'app-icon.svg'
       - 'splash.jpg'
       - 'Yamate Screenshot_20261010-191020_1.png'
-      - 'Yamate Screenshot_20261010-191020_1.png'
+      - 'launcher-icon.jpg'
       - 'maxresdefault-4-1024x576.jpg.webp'
       - 'android-custom/**'
       - '.github/workflows/build-apk.yml'
@@ -42,7 +42,7 @@ jobs:
           import cairosvg
           from PIL import Image
           import io
-          src = Image.open("Yamate Screenshot_20261010-191020_1.png").convert("RGBA")
+          src = Image.open("launcher-icon.jpg").convert("RGBA")
           src.thumbnail((512, 512), Image.Resampling.LANCZOS)
           canvas = Image.new("RGBA", (512, 512), (255,255,255,255))
           canvas.alpha_composite(src, ((512-src.width)//2, (512-src.height)//2))
@@ -131,18 +131,18 @@ jobs:
               out.write('<?xml version="1.0" encoding="utf-8"?>\n<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle"><solid android:color="#002B1029"/></shape>\n')
           print("Disabled the launch-screen logo only; launcher icon remains unchanged.")
           PY
-          # Use the uploaded silver-haired anime PNG for Android launcher icons in every density.
+          # Use the provided monochrome Yamete kudasai image for Android launcher icons in every density.
           python3 - <<'PY'
           import cairosvg
           from PIL import Image
           import io, os, xml.etree.ElementTree as ET
-          source = Image.open("Yamate Screenshot_20261010-191020_1.png").convert("RGBA")
+          source = Image.open("launcher-icon.jpg").convert("RGBA")
           source.thumbnail((512, 512), Image.Resampling.LANCZOS)
           canvas = Image.new("RGBA", (512, 512), (255,255,255,255))
           canvas.alpha_composite(source, ((512-source.width)//2, (512-source.height)//2))
           source = canvas
           # Android 8+ prefers adaptive-icon XML over density PNGs. Replace those
-          # adaptive resources too, using the uploaded image as the foreground.
+          # adaptive resources too, using the provided monochrome image as the foreground.
           adaptive_dir = "android/app/src/main/res/mipmap-anydpi-v26"
           os.makedirs(adaptive_dir, exist_ok=True)
           foreground_dir = "android/app/src/main/res/drawable-nodpi"
