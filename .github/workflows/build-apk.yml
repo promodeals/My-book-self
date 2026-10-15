@@ -11,6 +11,7 @@ on:
       - 'app-icon.svg'
       - 'splash.jpg'
       - 'Yamate Screenshot_20261010-191020_1.png'
+      - 'file_000000001de48208b34c3688a68867bb.png'
       - 'launcher-icon.jpg'
       - 'maxresdefault-4-1024x576.jpg.webp'
       - 'android-custom/**'
@@ -50,7 +51,7 @@ jobs:
           for size in (192, 512):
               src.resize((size, size), Image.Resampling.LANCZOS).save("icon-" + str(size) + ".png", optimize=True)
           PY
-          cp index.html manifest.json service-worker.js icon-192.png icon-512.png bookshelf-background.jpg maxresdefault-4-1024x576.jpg.webp www/
+          cp index.html manifest.json service-worker.js icon-192.png icon-512.png bookshelf-background.jpg maxresdefault-4-1024x576.jpg.webp file_000000001de48208b34c3688a68867bb.png www/
           cp "Yamate Screenshot_20261010-191020_1.png" www/Screenshot_20261010-191020_1.png
           cp app-icon.svg www/
           if [ -f splash.jpg ]; then cp splash.jpg www/; fi
