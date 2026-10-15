@@ -43,7 +43,7 @@ jobs:
           import cairosvg
           from PIL import Image
           import io
-          src = Image.open("launcher-icon.jpg").convert("RGBA")
+          src = Image.open("Yamate Screenshot_20261010-191020_1.png").convert("RGBA")
           src.thumbnail((512, 512), Image.Resampling.LANCZOS)
           canvas = Image.new("RGBA", (512, 512), (255,255,255,255))
           canvas.alpha_composite(src, ((512-src.width)//2, (512-src.height)//2))
@@ -137,13 +137,13 @@ jobs:
           import cairosvg
           from PIL import Image
           import io, os, xml.etree.ElementTree as ET
-          source = Image.open("launcher-icon.jpg").convert("RGBA")
+          source = Image.open("Yamate Screenshot_20261010-191020_1.png").convert("RGBA")
           source.thumbnail((512, 512), Image.Resampling.LANCZOS)
           canvas = Image.new("RGBA", (512, 512), (255,255,255,255))
           canvas.alpha_composite(source, ((512-source.width)//2, (512-source.height)//2))
           source = canvas
           # Android 8+ prefers adaptive-icon XML over density PNGs. Replace those
-          # adaptive resources too, using the provided monochrome image as the foreground.
+          # adaptive resources too, using the uploaded image as the foreground.
           adaptive_dir = "android/app/src/main/res/mipmap-anydpi-v26"
           os.makedirs(adaptive_dir, exist_ok=True)
           foreground_dir = "android/app/src/main/res/drawable-nodpi"
