@@ -29,6 +29,8 @@ import java.util.UUID;
 @CapacitorPlugin(name = "FileShare")
 public class FileSharePlugin extends Plugin {
     private final Map<String, Uri> pickedUris = new HashMap<>();
+    private final Map<String, InputStream> openStreams = new HashMap<>();
+    private final Map<String, Integer> readOffsets = new HashMap<>();
     @PluginMethod
     public void getPendingFiles(PluginCall call) {
         Intent intent = getActivity().getIntent();
@@ -81,7 +83,7 @@ public class FileSharePlugin extends Plugin {
         String fileId = call.getString("fileId");
         Integer offsetValue = call.getInt("offset");
         Integer lengthValue = call.getInt("length");
-        if (fileId == null || offsetValue == null || lengthValue == null || lengthValue < 1 || lengthValue > 262144) {
+        if (fileId == null || offsetValue == null || lengthValue == null || offsetValue < 0 || lengthValue < 1 || lengthValue > 524288) {
             call.reject("Invalid file chunk request");
             return;
         }
@@ -90,16 +92,23 @@ public class FileSharePlugin extends Plugin {
             call.reject("Selected file is no longer available. Please select it again.");
             return;
         }
-        try (InputStream input = getContext().getContentResolver().openInputStream(uri)) {
-            if (input == null) throw new Exception("Unable to open selected file");
-            long remaining = offsetValue;
-            while (remaining > 0) {
-                long skipped = input.skip(remaining);
-                if (skipped <= 0) {
-                    if (input.read() == -1) break;
-                    skipped = 1;
+        try {
+            InputStream input = openStreams.get(fileId);
+            Integer expectedOffset = readOffsets.get(fileId);
+            if (input == null || expectedOffset == null || expectedOffset != offsetValue) {
+                if (input != null) try { input.close(); } catch (Exception ignored) {}
+                input = getContext().getContentResolver().openInputStream(uri);
+                if (input == null) throw new Exception("Unable to open selected file");
+                long remaining = offsetValue;
+                while (remaining > 0) {
+                    long skipped = input.skip(remaining);
+                    if (skipped <= 0) {
+                        if (input.read() == -1) break;
+                        skipped = 1;
+                    }
+                    remaining -= skipped;
                 }
-                remaining -= skipped;
+                openStreams.put(fileId, input);
             }
             byte[] buffer = new byte[lengthValue];
             int total = 0;
@@ -113,8 +122,18 @@ public class FileSharePlugin extends Plugin {
             JSObject result = new JSObject();
             result.put("base64", Base64.encodeToString(chunk, Base64.NO_WRAP));
             result.put("bytesRead", total);
+            if (total == 0 || total < lengthValue) {
+                try { input.close(); } catch (Exception ignored) {}
+                openStreams.remove(fileId);
+                readOffsets.remove(fileId);
+            } else {
+                readOffsets.put(fileId, offsetValue + total);
+            }
             call.resolve(result);
         } catch (Exception e) {
+            InputStream input = openStreams.remove(fileId);
+            readOffsets.remove(fileId);
+            if (input != null) try { input.close(); } catch (Exception ignored) {}
             call.reject("Could not read selected file: " + e.getMessage(), e);
         }
     }
