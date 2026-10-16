@@ -52,6 +52,61 @@ jobs:
               src.resize((size, size), Image.Resampling.LANCZOS).save("icon-" + str(size) + ".png", optimize=True)
           PY
           cp index.html manifest.json service-worker.js icon-192.png icon-512.png bookshelf-background.jpg maxresdefault-4-1024x576.jpg.webp file_000000001de48208b34c3688a68867bb.png www/
+          # Add an isolated GitHub update control to the generated web app only.
+          # The source index.html and all existing bookshelf/reader/storage code stay unchanged.
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("www/index.html")
+          html = p.read_text(encoding="utf-8")
+          marker = '<button class="btn secondary" id="themeBtn" type="button" aria-pressed="false">🌙 Dark mode</button>'
+          if 'id="updateBtn"' not in html:
+              if marker not in html:
+                  raise SystemExit("Could not find existing toolbar marker; refusing to modify app UI")
+              html = html.replace(marker, marker + '\\n    <button class="btn secondary" id="updateBtn" type="button">↻ Check for updates</button>', 1)
+              script = r'''
+          <script id="github-update-feature">
+          (() => {
+            const button = document.getElementById('updateBtn');
+            if (!button) return;
+            const releaseApi = 'https://api.github.com/repos/promodeals/My-book-self/releases/latest';
+            const releasesPage = 'https://github.com/promodeals/My-book-self/releases';
+            button.addEventListener('click', async () => {
+              const original = button.textContent;
+              button.disabled = true;
+              button.textContent = 'Checking…';
+              try {
+                const response = await fetch(releaseApi, {headers:{'Accept':'application/vnd.github+json'}});
+                if (response.status === 404) {
+                  alert('No published update is available yet. Please try again later.');
+                  return;
+                }
+                if (!response.ok) throw new Error('GitHub returned HTTP ' + response.status);
+                const release = await response.json();
+                const apk = (release.assets || []).find(asset => /\\.apk$/i.test(asset.name || ''));
+                if (!apk) {
+                  alert('A release was found, but it does not contain an APK yet. Opening the GitHub releases page.');
+                  window.open(releasesPage, '_blank');
+                  return;
+                }
+                const choice = confirm('My Bookshelf update found: ' + (release.tag_name || release.name || 'Latest release') + '\\n\\nOpen the APK download page? Your saved files will not be changed by this check.');
+                if (choice) window.open(release.html_url || releasesPage, '_blank');
+              } catch (error) {
+                console.error('GitHub update check failed', error);
+                if (confirm('Could not check updates right now. Open the GitHub releases page instead?')) window.open(releasesPage, '_blank');
+              } finally {
+                button.disabled = false;
+                button.textContent = original;
+              }
+            });
+          })();
+          </script>
+          '''
+              html = html.replace('</body>', script + '\\n</body>', 1)
+              p.write_text(html, encoding="utf-8")
+              print("Added GitHub update checker without editing existing app logic.")
+          else:
+              print("GitHub update checker already present.")
+          PY
           cp "Yamate Screenshot_20261010-191020_1.png" www/Screenshot_20261010-191020_1.png
           cp app-icon.svg www/
           if [ -f splash.jpg ]; then cp splash.jpg www/; fi
